@@ -7,9 +7,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production node server.js",
     "dev": "cross-env NODE_ENV=development nodemon server.js",
-    "seed": "node scripts/seedEducation.js",
-    "seedEducation": "node scripts/seedEducationData.js",
-    "seedLearning": "node scripts/seedLearningData.js",
+    "seed": "node scripts/seedLearningData.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
