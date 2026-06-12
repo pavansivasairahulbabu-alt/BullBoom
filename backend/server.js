@@ -63,16 +63,7 @@ const autoSeedLearningData = async () => {
   <li>An option quoted at $2.00 actually costs $200 to purchase.</li>
   <li>All gains, losses, and risk calculations scale by this 100-share multiplier.</li>
 </ul>`,
-            keyTakeaways: [
-              'Option buyers have rights, not obligations.',
-              'Option sellers have obligations.',
-              'American and European options differ by exercise timing.',
-              'One standard contract controls 100 shares.'
-            ],
-            examples: [
-              { title: 'Example 1', description: 'A trader purchases one call option with a premium of $2.00.' },
-              { title: 'Example 2', description: 'Since one contract controls 100 shares, total cost becomes $200.' }
-            ],
+
             videoUrl: '',
             estimatedTime: '10 min',
             order: 1
@@ -104,16 +95,7 @@ const autoSeedLearningData = async () => {
   <li>Maximum loss occurs if the stock finishes below the strike price at expiry.</li>
   <li>The option simply expires completely worthless, resulting in a 100% loss.</li>
 </ul>`,
-            keyTakeaways: [
-              'Calls are bullish instruments.',
-              'Risk is limited to premium paid.',
-              'Upside potential increases with rising stock prices.',
-              'Breakeven equals strike plus premium.'
-            ],
-            examples: [
-              { title: 'Example 1', description: 'Buy a ₹100 strike call for ₹10 premium.' },
-              { title: 'Example 2', description: 'Breakeven becomes ₹110.' }
-            ],
+
             videoUrl: '',
             estimatedTime: '12 min',
             order: 2
@@ -145,15 +127,7 @@ const autoSeedLearningData = async () => {
   <li>It establishes a concrete price floor where you can sell your shares.</li>
   <li>It allows you to participate in upside gains while limiting maximum downside.</li>
 </ul>`,
-            keyTakeaways: [
-              'Puts are bearish instruments.',
-              'Risk remains limited.',
-              'Useful for portfolio protection.',
-              'Time decay affects profitability.'
-            ],
-            examples: [
-              { title: 'Example', description: 'Buy 100 shares and one protective put option.' }
-            ],
+
             videoUrl: '',
             estimatedTime: '12 min',
             order: 3
@@ -177,15 +151,7 @@ const autoSeedLearningData = async () => {
   <li>Choosing further OTM increases leverage but decreases your win rate.</li>
   <li>Choosing deep ITM mimics owning the actual stock with less premium erosion.</li>
 </ul>`,
-            keyTakeaways: [
-              'Strike selection impacts risk and reward.',
-              'OTM = cheaper but riskier.',
-              'ITM = expensive but safer.',
-              'ATM tracks stock closely.'
-            ],
-            examples: [
-              { title: 'Example', description: 'Stock trading at ₹100.<br>ITM Call = ₹90 Strike<br>ATM Call = ₹100 Strike<br>OTM Call = ₹110 Strike' }
-            ],
+
             videoUrl: '',
             estimatedTime: '8 min',
             order: 4
@@ -217,15 +183,7 @@ const autoSeedLearningData = async () => {
   <li>The erosion becomes steepest during the final 30 to 45 days.</li>
   <li>Theta hurts option buyers but directly benefits option sellers.</li>
 </ul>`,
-            keyTakeaways: [
-              'Premium contains intrinsic and extrinsic value.',
-              'IV affects pricing significantly.',
-              'Theta increases near expiry.',
-              'Time decay is a major risk for buyers.'
-            ],
-            examples: [
-              { title: 'Example', description: 'Option premium = ₹50<br>Intrinsic Value = ₹30<br>Extrinsic Value = ₹20' }
-            ],
+
             videoUrl: '',
             estimatedTime: '9 min',
             order: 5
@@ -249,15 +207,7 @@ const autoSeedLearningData = async () => {
   <li>LEAPS are long-term options with expiration dates spanning up to 1–3 years.</li>
   <li>Shorter cycles experience rapid time decay; longer cycles decay much slower.</li>
 </ul>`,
-            keyTakeaways: [
-              'Expiry affects option value.',
-              'Auto-exercise may occur.',
-              'Shorter expiries decay faster.',
-              'Longer expiries provide more time.'
-            ],
-            examples: [
-              { title: 'Example', description: 'An ITM call option may automatically purchase 100 shares at expiry.' }
-            ],
+
             videoUrl: '',
             estimatedTime: '7 min',
             order: 6
@@ -281,15 +231,7 @@ const autoSeedLearningData = async () => {
   <li>If ignored, the broker will force-liquidate positions without your consent.</li>
   <li>Liquidation often occurs at worst-case market prices, locking in steep losses.</li>
 </ul>`,
-            keyTakeaways: [
-              'Buyers have limited risk.',
-              'Sellers require margin.',
-              'Margin calls must be managed carefully.',
-              'Proper risk management is essential.'
-            ],
-            examples: [
-              { title: 'Example', description: 'A seller writing uncovered options may need additional margin when markets move against the position.' }
-            ],
+
             videoUrl: '',
             estimatedTime: '11 min',
             order: 7
@@ -382,11 +324,61 @@ const autoSeedLearningData = async () => {
         estimatedHours: 10,
         order: 3,
         topics: [
-          { title: 'Delta', description: 'Learn how Delta affects your options.', icon: '📐', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
-          { title: 'Gamma', description: 'Understand Gamma, the rate of change of Delta.', icon: '📐', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
-          { title: 'Theta', description: 'Time decay - the silent killer.', icon: '⏳', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
-          { title: 'Vega', description: 'Volatility sensitivity.', icon: '🌊', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
-          { title: 'Rho', description: 'Interest rate sensitivity.', icon: '🏦', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+          { 
+            title: 'Delta', 
+            description: 'Directional Risk - Price Sensitivity', 
+            icon: '📐', 
+            content: '<ul><li><strong>Measures Price Sensitivity:</strong> Delta indicates how much an option\'s price is expected to move for every $1 change in the underlying asset\'s price.</li><li><strong>Value Ranges:</strong> Call options have a positive Delta ranging from 0 to 1, while Put options have a negative Delta ranging from -1 to 0.</li><li><strong>Probability Proxy:</strong> Traders often use Delta as a rough mathematical estimate of the percentage chance that an option will expire in-the-money (ITM). For example, a 0.30 Delta implies roughly a 30% chance.</li><li><strong>Share Equivalence:</strong> A Delta of 0.50 means the option behaves similarly to owning 50 shares of the underlying stock.</li><li><strong>Dynamic Nature:</strong> Delta is not static; it constantly shifts as the underlying stock price moves and as expiration approaches.</li></ul>', 
+            keyTakeaways: [], 
+            examples: [], 
+            videoUrl: '', 
+            estimatedTime: '10 min', 
+            order: 1 
+          },
+          { 
+            title: 'Gamma', 
+            description: 'Rate of Change - Delta\'s Acceleration', 
+            icon: '📐', 
+            content: '<ul><li><strong>Measures Delta\'s Sensitivity:</strong> Gamma represents the rate of change in an option\'s Delta for every $1 move in the underlying stock. If Delta is the "speed" of the option, Gamma is the "acceleration."</li><li><strong>Highest at the Money:</strong> Gamma is typically at its peak for at-the-money (ATM) options and decreases as the option moves deep into or out of the money.</li><li><strong>Positive Value:</strong> It is always a positive number for buyers of both long calls and long puts.</li><li><strong>Risk Indicator:</strong> A high Gamma means the option\'s Delta can change rapidly with small stock movements, resulting in higher price volatility and potential risk/reward.</li><li><strong>Expiration Impact:</strong> Gamma tends to increase significantly as expiration draws closer, making near-term ATM options highly sensitive to underlying price swings.</li></ul>', 
+            keyTakeaways: [], 
+            examples: [], 
+            videoUrl: '', 
+            estimatedTime: '10 min', 
+            order: 2 
+          },
+          { 
+            title: 'Theta', 
+            description: 'Time Decay - The Silent Killer', 
+            icon: '⏳', 
+            content: '<ul><li><strong>Measures Time Sensitivity:</strong> Theta quantifies the rate of time decay on an option\'s premium, representing how much value the option loses each day as it nears expiration.</li><li><strong>The Silent Killer for Buyers:</strong> Theta is generally negative for option buyers (meaning time works against them) and positive for option sellers (meaning time works in their favor).</li><li><strong>Accelerates Over Time:</strong> Time decay is not linear; it accelerates rapidly in the final weeks and days leading up to expiration, particularly for at-the-money options.</li><li><strong>Targets Extrinsic Value:</strong> Theta only eats away at an option\'s extrinsic (time) value. It does not affect the intrinsic value of an option that is already in-the-money.</li><li><strong>Weekend Effect:</strong> While the market is closed, time decay still mathematically occurs, though market makers often price in weekend Theta decay by late Friday.</li></ul>', 
+            keyTakeaways: [], 
+            examples: [], 
+            videoUrl: '', 
+            estimatedTime: '10 min', 
+            order: 3 
+          },
+          { 
+            title: 'Vega', 
+            description: 'Volatility Risk', 
+            icon: '🌊', 
+            content: '<ul><li><strong>Measures Volatility Sensitivity:</strong> Vega indicates how much an option\'s price will change for a 1% shift in the underlying asset\'s implied volatility (IV).</li><li><strong>Positive for Buyers:</strong> When implied volatility increases, option premiums generally become more expensive, making Vega a positive force for option buyers and a risk for sellers.</li><li><strong>Impacts Longer-Term Options:</strong> Vega has the greatest impact on options with longer expiration dates, as there is more time for volatility to drastically affect the underlying asset.</li><li><strong>Highest at the Money:</strong> Like Gamma, Vega is most concentrated in at-the-money options and drops off for deep out-of-the-money or in-the-money contracts.</li><li><strong>The "IV Crush":</strong> A sudden drop in implied volatility (which frequently happens right after an anticipated event like an earnings report) can severely reduce an option\'s price, even if the stock moves in the desired direction.</li></ul>', 
+            keyTakeaways: [], 
+            examples: [], 
+            videoUrl: '', 
+            estimatedTime: '10 min', 
+            order: 4 
+          },
+          { 
+            title: 'Rho', 
+            description: 'Interest Rate Risk', 
+            icon: '🏦', 
+            content: '<ul><li><strong>Measures Interest Rate Sensitivity:</strong> Rho represents the expected change in an option\'s price for a 1% change in the risk-free interest rate (often tied to U.S. Treasury bills).</li><li><strong>Divergence Between Calls and Puts:</strong> Call options generally have a positive Rho (values increase as interest rates rise), while put options have a negative Rho (values decrease as rates rise).</li><li><strong>Minimal Short Term Impacts:</strong> For standard, short-term options trades, Rho is usually the least significant of the Greeks and has a negligible effect on daily pricing.</li><li><strong>Relevance for LEAPS:</strong> Rho becomes a much more crucial factor for longer-term options, such as Long-Term Equity Anticipation Securities (LEAPS), where the cost of carrying the position over months or years is higher.</li><li><strong>Macroeconomic Factor:</strong> Because interest rates change infrequently compared to stock prices or market volatility, Rho is typically only monitored closely during periods of aggressive central bank policy shifts.</li></ul>', 
+            keyTakeaways: [], 
+            examples: [], 
+            videoUrl: '', 
+            estimatedTime: '10 min', 
+            order: 5 
+          }
         ]
       },
       // Category 4: Open Interest
@@ -505,11 +497,6 @@ const autoSeedLearningData = async () => {
     ];
 
     // --- Process each category ---
-    let categoriesCreated = 0;
-    let categoriesUpdated = 0;
-    let topicsCreated = 0;
-    let topicsUpdated = 0;
-
     for (const categoryData of allCategories) {
       // Extract topics from category data
       const { topics, ...categoryFields } = categoryData;
@@ -519,13 +506,9 @@ const autoSeedLearningData = async () => {
       if (category) {
         // Update existing category
         await CourseCategory.updateOne({ _id: category._id }, { $set: categoryFields });
-        categoriesUpdated++;
-        console.log(`✅ Updated category: ${categoryData.name}`);
       } else {
         // Create new category
         category = await CourseCategory.create(categoryFields);
-        categoriesCreated++;
-        console.log(`✅ Created category: ${categoryData.name}`);
       }
 
       // Process topics for this category
@@ -536,31 +519,59 @@ const autoSeedLearningData = async () => {
         // Find or create topic
         let topic = await Topic.findOne({ category: category._id, title: topicData.title });
         if (topic) {
-          // Update existing topic (preserve _id)
-          await Topic.updateOne({ _id: topic._id }, { $set: topicWithCategory });
-          topicsUpdated++;
+          // Update existing topic (preserve _id), and unset keyTakeaways/examples if not provided
+          const updateObj = { $set: topicWithCategory };
+          // If the topicData doesn't have keyTakeaways, unset it
+          if (!('keyTakeaways' in topicData)) {
+            updateObj.$unset = updateObj.$unset || {};
+            updateObj.$unset.keyTakeaways = "";
+          }
+          // If the topicData doesn't have examples, unset it
+          if (!('examples' in topicData)) {
+            updateObj.$unset = updateObj.$unset || {};
+            updateObj.$unset.examples = "";
+          }
+          await Topic.updateOne({ _id: topic._id }, updateObj);
         } else {
           // Create new topic
           await Topic.create(topicWithCategory);
-          topicsCreated++;
         }
       }
-      console.log(`   📚 Processed ${topics.length} topics for ${categoryData.name}`);
     }
 
     // --- Process Quiz and Achievements ---
     // Keep original quiz and achievements
     const quizQuestions = [
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q1', question: 'What does an option contract represent?', options: ['Obligation to buy/sell', 'Right, but not obligation to buy/sell', 'Stock share', 'Bond'], correctAnswer: 1, explanation: 'Options give rights, not obligations.' },
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q2', question: 'A call option gives the right to?', options: ['Sell', 'Buy', 'Hold', 'None'], correctAnswer: 1, explanation: 'Calls give right to buy.' },
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q3', question: 'A put option gives the right to?', options: ['Buy', 'Sell', 'Hold', 'None'], correctAnswer: 1, explanation: 'Puts give right to sell.' },
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q4', question: 'What is strike price?', options: ['Market price', 'Agreed price in contract', 'Average price', 'High price'], correctAnswer: 1, explanation: 'Strike is agreed price for contract.' },
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q5', question: 'What is option premium?', options: ['Market price of stock', 'Price paid to buy option', 'Brokerage', 'Tax'], correctAnswer: 1, explanation: 'Premium is what you pay for option.' },
-      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q6', question: 'ATM means?', options: ['At The Money', 'After The Market', 'Above The Money', 'Automatic Trade Mode'], correctAnswer: 0, explanation: 'ATM = At The Money.' },
-      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q7', question: 'ITM means?', options: ['In The Money', 'In Time Money', 'International Trade Market', 'Intraday Trading Model'], correctAnswer: 0, explanation: 'ITM = In The Money.' },
-      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q8', question: 'What is intrinsic value?', options: ['Time value', 'Real value if ITM', 'Total premium', 'Broker fee'], correctAnswer: 1, explanation: 'Intrinsic value is real value of ITM option.' },
-      { category: 'Option Basics', difficulty: 'Hard', title: 'Options Basics Q9', question: 'Who faces theoretically unlimited loss?', options: ['Call Buyer', 'Call Seller', 'Put Buyer', 'All'], correctAnswer: 1, explanation: 'Call seller has unlimited risk.' },
-      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q10', question: 'What happens to OTM options at expiry?', options: ['Get exercised', 'Become worthless', 'Automatically roll over', 'Convert to shares'], correctAnswer: 1, explanation: 'OTM options expire worthless.' }
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q1', question: 'What is the standard expiry day for weekly Index options (like Nifty 50) in India?', options: ['Every Friday', 'Every Thursday', 'Every Wednesday'], correctAnswer: 1, explanation: 'Weekly Nifty options in India expire every Thursday.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q2', question: 'Unlike individual stocks, Nifty and Bank Nifty index options in India are:', options: ['American-style (exercised anytime)', 'European-style (exercised only at expiry)', 'Cash-settled only before Wednesday'], correctAnswer: 1, explanation: 'Index options in India are European-style and can only be exercised at expiry.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q3', question: 'In India, if you hold an In-the-Money (ITM) stock option through expiry, how is it settled?', options: ['Cash settlement of the profit difference', 'Physical delivery (you must buy/deliver the actual shares)', 'The contract is canceled with zero value'], correctAnswer: 1, explanation: 'ITM stock options in India are physically settled at expiry.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q4', question: 'If Nifty is at 23,000 and you buy a 23,200 Call option, this option is:', options: ['In-the-Money (ITM)', 'At-the-Money (ATM)', 'Out-of-the-Money (OTM)'], correctAnswer: 2, explanation: 'A call option with a strike price higher than the current market price is out-of-the-money.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q5', question: 'Which index measures the expected volatility and "fear factor" in the Indian stock market?', options: ['India VIX', 'Nifty 500', 'Sectoral Index'], correctAnswer: 0, explanation: 'India VIX is the volatility index that measures market fear and expected volatility.' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q6', question: 'If you buy 1 lot of Nifty options, how many shares (lot size) are you controlling?', options: ['Exactly 100 shares', 'Exactly 25 or 75 shares (depending on current SEBI lot sizes)', 'Exactly 1 share'], correctAnswer: 1, explanation: 'SEBI adjusts Nifty lot sizes periodically, currently it varies (25 or 75 shares historically).' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q7', question: 'In India, option premiums are quoted in Rupees. If a premium is ₹50 and the lot size is 25, what is the total premium cost?', options: ['₹50', '₹1,250', '₹5,000'], correctAnswer: 1, explanation: 'Total cost = Premium per share × Lot size = 50 × 25 = ₹1,250.' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q8', question: 'To comply with SEBI regulations, an option SELLER (writer) in India must maintain:', options: ['No balance, just pay premium', 'SPAN and Exposure Margin in their demat/trading account', 'A fixed ₹10,000 deposit for every trade'], correctAnswer: 1, explanation: 'Option sellers must maintain SPAN and Exposure Margin as collateral.' },
+      { category: 'Option Basics', difficulty: 'Hard', title: 'Options Basics Q9', question: 'What happens to the premium of an OTM Nifty option on the evening of its expiry day?', options: ['It becomes ₹0', 'It doubles in value', 'It remains equal to its intrinsic value'], correctAnswer: 0, explanation: 'Out-of-the-money options expire worthless, so their premium becomes zero.' },
+      { category: 'Option Basics', difficulty: 'Hard', title: 'Options Basics Q10', question: 'What is the official settlement price used for index options at 3:30 PM on expiry day?', options: ['The exact last traded price (LTP) at 3:30 PM', 'The opening price of the day', 'The volume-weighted average price (VWAP) of the last 30 minutes of trading'], correctAnswer: 2, explanation: 'Index options in India settle at the VWAP of the last 30 minutes of trading on expiry day.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q1', question: 'Which part of a candlestick represents the absolute highest price reached during a trading session?', options: ['The open price', 'The upper shadow (wick)', 'The real body', 'The lower shadow (wick)'], correctAnswer: 1, explanation: 'The upper shadow (wick) represents the highest price of the session.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q2', question: 'If a candlestick has a very long real green body, what does it tell you about market momentum?', options: ['Sellers are completely dominating the session', 'Buyers are strongly dominating the session', 'The market is trapped in heavy indecision', 'Trading volume has hit zero'], correctAnswer: 1, explanation: 'A long green body indicates strong bullish momentum and buyer dominance.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q3', question: 'What defines a standard Doji candlestick pattern?', options: ['Its body is twice as large as its wicks', 'It has no wicks on either side', 'The opening and closing prices are virtually equal', 'It always points straight downward'], correctAnswer: 2, explanation: 'A Doji forms when open and close prices are almost identical.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q4', question: 'A Doji forming in the middle of a choppy, sideways trading range provides a highly reliable trend reversal signal.', options: ['True', 'False'], correctAnswer: 1, explanation: 'A Doji in the middle of a sideways range is not a reliable reversal signal.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q5', question: 'Where must a valid Hammer candlestick pattern always appear to be a valid signal?', options: ['At the absolute peak of a strong uptrend', 'Right in the middle of a flat consolidation range', 'At the bottom of a defined downtrend', 'Only when a stock drops on a Sunday morning'], correctAnswer: 2, explanation: 'A Hammer is a valid bullish reversal pattern only at the bottom of a downtrend.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q6', question: 'What is the strict structural rule regarding a Hammer\'s lower wick?', options: ['It must be shorter than the real body', 'It must be at least two to three times the length of the real body', 'It must be completely non-existent', 'It must match the length of the upper wick perfectly'], correctAnswer: 1, explanation: 'A Hammer\'s lower wick must be 2-3x the size of its real body.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q7', question: 'What does the long upper shadow of a Shooting Star reveal?', options: ['Buyers pushed prices high but failed to maintain them by the close', 'Sellers tried to push prices down but failed completely', 'Buyers successfully held the highest price until the closing bell', 'The market has run out of available shares to trade'], correctAnswer: 0, explanation: 'Shooting Star\'s long upper shadow shows buyers failed to hold highs.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q8', question: 'If the very next candle breaks and closes above the high wick of a Shooting Star, the bearish reversal signal is strictly invalidated.', options: ['True', 'False'], correctAnswer: 0, explanation: 'If next candle closes above Shooting Star high, signal is invalidated.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q9', question: 'In a Bullish Engulfing pattern, what part of the first candle must the second green candle completely swallow?', options: ['Just the bottom lower wick', 'The entire real body of the first candle', 'The trading volume bar beneath the chart', 'The opening price only'], correctAnswer: 1, explanation: 'Bullish Engulfing requires second candle to engulf first\'s entire real body.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q10', question: 'What type of market signal is a Morning Star pattern?', options: ['A bearish continuation signal', 'A bearish reversal signal', 'A bullish reversal signal', 'A sideways consolidation signal'], correctAnswer: 2, explanation: 'Morning Star is a bullish reversal pattern.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q1', question: 'If an option has a Delta of 0.60, how much is its price expected to change if the underlying stock increases by $1?', options: ['It will increase by $1.00', 'It will increase by $0.60', 'It will decrease by $0.60', 'It will increase by 60%'], correctAnswer: 1, explanation: 'Delta indicates how much an option\'s price moves for a $1 change in the underlying asset.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q2', question: 'In practical trading, what does a Delta of 0.25 roughly estimate?', options: ['A 25% return on investment at expiration', 'The option loses $0.25 of value every day', 'A 25% probability that the option will expire in-the-money', 'The underlying stock price will move by 25%'], correctAnswer: 2, explanation: 'Delta is often used as a rough estimate of an option\'s probability of expiring ITM.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q3', question: 'Which option Greek measures the expected change in Delta for a $1 move in the underlying stock?', options: ['Gamma', 'Theta', 'Vega', 'Rho'], correctAnswer: 0, explanation: 'Gamma is the rate of change of Delta for every $1 move in the underlying stock.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q4', question: 'At what strike price location is Gamma typically at its highest mathematical value?', options: ['Deep out-of-the-money (OTM) options', 'Deep in-the-money (ITM) options', 'At-the-money (ATM) options', 'It is equal across all strike prices'], correctAnswer: 2, explanation: 'Gamma is typically highest for at-the-money (ATM) options.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q5', question: 'How does Theta primarily affect an investor holding a long (bought) option position?', options: ['It steadily erodes the extrinsic value of the option each day', 'It increases the intrinsic value of the option over time', 'It causes the underlying stock price to decline', 'It protects the option premium from market crashes'], correctAnswer: 0, explanation: 'Theta is negative for option buyers, eroding extrinsic value daily.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q6', question: 'At what point does time decay (Theta) accelerate the fastest for an at-the-money option?', options: ['More than a year away from expiration', 'In the final weeks and days leading up to expiration', 'Immediately in the first 24 hours after the option is created', 'Time decay is completely linear and never changes speed'], correctAnswer: 1, explanation: 'Time decay accelerates rapidly in the final weeks/days before expiration, especially for ATM options.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q7', question: 'If market-wide implied volatility (IV) suddenly spikes, which Greek indicates how much an option\'s premium will increase?', options: ['Delta', 'Gamma', 'Vega', 'Rho'], correctAnswer: 2, explanation: 'Vega measures an option\'s sensitivity to changes in implied volatility (IV).' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q8', question: 'What typically happens to an option\'s premium due to Vega immediately following a highly anticipated event like an earnings report?', options: ['The premium spikes aggressively because the event is over', 'The premium drops significantly due to a rapid collapse in implied volatility ("IV Crush")', 'The premium stays completely frozen until the next trading day', 'The intrinsic value immediately drops to zero'], correctAnswer: 1, explanation: 'After anticipated events, implied volatility often drops rapidly, causing an "IV Crush" that reduces option premiums.' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q9', question: 'For which type of option strategy is Rho (interest rate sensitivity) the most critical factor to actively monitor?', options: ['Zero days to expiration (0DTE) day trades', 'Weekly swing trades', 'Long-term options contracts, such as LEAPS (held for a year or more)', 'Overnight earnings gap plays'], correctAnswer: 2, explanation: 'Rho is most relevant for longer-term options like LEAPS, where interest rate impacts are more significant.' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q10', question: 'How do the standard Delta values of basic long Call options compare to basic long Put options?', options: ['Calls have a positive Delta, while Puts have a negative Delta', 'Calls have a negative Delta, while Puts have a positive Delta', 'Both Calls and Puts have a positive Delta', 'Both Calls and Puts have a neutral Delta of zero'], correctAnswer: 0, explanation: 'Long calls have positive Delta, long puts have negative Delta.' }
     ];
 
     // Clear and reinsert quiz questions (optional, but to keep consistent)
@@ -576,14 +587,6 @@ const autoSeedLearningData = async () => {
     ];
     await Achievement.deleteMany({});
     await Achievement.insertMany(achievementsData);
-
-    // --- Summary ---
-    console.log('✅ Auto-seed complete!');
-    console.log('📊 Summary:');
-    console.log(`   Categories created: ${categoriesCreated}`);
-    console.log(`   Categories updated: ${categoriesUpdated}`);
-    console.log(`   Topics created: ${topicsCreated}`);
-    console.log(`   Topics updated: ${topicsUpdated}`);
   } catch (error) {
     console.error('❌ Auto-seeding error:', error);
   }

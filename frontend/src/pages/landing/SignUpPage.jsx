@@ -8,7 +8,6 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
-  FaGift,
   FaCheck,
   FaGoogle,
   FaTelegram,
@@ -25,7 +24,6 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -187,7 +185,6 @@ export default function SignUpPage() {
           email,
           phone,
           password,
-          referralCode,
         }),
       });
 
@@ -514,20 +511,6 @@ export default function SignUpPage() {
                       >
                         {showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Referral Code */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 px-4 py-4 rounded-xl bg-[#050816] border border-white/10 focus-within:border-[#32CD32]/50 focus-within:shadow-[0_0_20px_rgba(50,205,50,0.15)] transition-all">
-                      <FaGift className="text-[#32CD32] w-4 h-4" />
-                      <input
-                        type="text"
-                        placeholder="Enter referral code (optional)"
-                        value={referralCode}
-                        onChange={(e) => setReferralCode(e.target.value)}
-                        className="flex-1 bg-transparent text-white outline-none placeholder:text-[#B8C0D4]/50"
-                      />
                     </div>
                   </div>
 
