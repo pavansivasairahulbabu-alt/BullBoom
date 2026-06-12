@@ -19,8 +19,8 @@ export default function Category() {
     try {
       setLoading(true);
       const res = await educationApi.getCategory(id);
-      if (res.data.success) {
-        setData(res.data.data);
+      if (res.success) {
+        setData(res.data);
       }
     } catch (err) {
       console.error(err);

@@ -41,12 +41,12 @@ export default function Quiz() {
     try {
       setLoading(true);
       const catRes = await educationApi.getCategory(id);
-      if (catRes.data.success) {
-        setCategory(catRes.data.data.category);
+      if (catRes.success) {
+        setCategory(catRes.data.category);
       }
       const res = await educationApi.getQuizByCategory(id);
-      if (res.data.success) {
-        setQuestions(res.data.data);
+      if (res.success) {
+        setQuestions(res.data);
       }
     } catch (err) {
       console.error(err);
@@ -69,14 +69,14 @@ export default function Quiz() {
       const currentQuestion = questions[currentIndex];
       const payload = { quizId: currentQuestion._id, selectedAnswer };
       const res = await educationApi.submitQuiz(payload);
-      if (res.data.success) {
-        setCurrentQuestionResult(res.data);
+      if (res.success) {
+        setCurrentQuestionResult(res);
         setAnsweredQuestions(prev => [...prev, {
           question: currentQuestion,
           selectedAnswer,
-          isCorrect: res.data.isCorrect,
-          correctAnswer: res.data.correctAnswer,
-          attempt: res.data.attempt
+          isCorrect: res.isCorrect,
+          correctAnswer: res.correctAnswer,
+          attempt: res.attempt
         }]);
         setShowResult(true);
       }

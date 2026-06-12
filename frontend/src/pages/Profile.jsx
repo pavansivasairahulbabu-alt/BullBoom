@@ -19,7 +19,7 @@ import {
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { userApi } from "../services/api";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -41,16 +41,16 @@ export default function Profile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/user/profile");
-      if (response.data.success) {
-        setUser(response.data.user);
+      const res = await userApi.getProfile();
+      if (res.success) {
+        setUser(res.user);
         setEditForm({
-          fullName: response.data.user.fullName || "",
-          username: response.data.user.username || "",
-          phone: response.data.user.phone || "",
-          location: response.data.user.location || "",
-          tradingExperience: response.data.user.tradingExperience || "",
-          riskProfile: response.data.user.riskProfile || "",
+          fullName: res.user.fullName || "",
+          username: res.user.username || "",
+          phone: res.user.phone || "",
+          location: res.user.location || "",
+          tradingExperience: res.user.tradingExperience || "",
+          riskProfile: res.user.riskProfile || "",
         });
       }
     } catch (error) {
@@ -123,12 +123,10 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("profileImage", file);
 
-      const response = await api.post("/user/upload-profile", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await userApi.uploadProfileImage(formData);
 
-      if (response.data.success) {
-        setUser(response.data.user);
+      if (res.success) {
+        setUser(res.user);
         toast.success("Profile image updated");
       }
     } catch (error) {
@@ -146,9 +144,9 @@ export default function Profile() {
   // Handle edit profile save
   const handleEditSave = async () => {
     try {
-      const response = await api.put("/user/profile", editForm);
-      if (response.data.success) {
-        setUser(response.data.user);
+      const res = await userApi.updateProfile(editForm);
+      if (res.success) {
+        setUser(res.user);
         setIsEditModalOpen(false);
         toast.success("Profile updated successfully");
       }
@@ -160,7 +158,7 @@ export default function Profile() {
   // Handle delete account
   const handleDeleteAccount = async () => {
     try {
-      await api.delete("/user/account");
+      await userApi.deleteAccount();
       localStorage.removeItem("token");
       navigate("/login");
       toast.success("Account deleted successfully");

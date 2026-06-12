@@ -20,14 +20,14 @@ export default function Topic() {
     try {
       setLoading(true);
       const res = await educationApi.getTopic(id);
-      if (res.data.success) {
-        setData(res.data.data);
+      if (res.success) {
+        setData(res.data);
         // Fetch category topics to get prev/next
-        const categoryId = res.data.data.topic.category?._id || res.data.data.topic.category;
+        const categoryId = res.data.topic.category?._id || res.data.topic.category;
         if (categoryId) {
           const catRes = await educationApi.getCategory(categoryId);
-          if (catRes.data.success) {
-            setTopics(catRes.data.data.topics);
+          if (catRes.success) {
+            setTopics(catRes.data.topics);
           }
         }
       }
