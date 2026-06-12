@@ -52,14 +52,23 @@ export const sendOtpEmail = async (to, otp) => {
   };
 
   try {
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+    console.log("SENDER_EMAIL:", process.env.SENDER_EMAIL);
+
     await transporter.verify();
     console.log("SMTP Connected Successfully");
+
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent: %s', info.messageId);
+    console.log("Email sent:", info.messageId);
+
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw new Error('Failed to send OTP email');
+    console.error("FULL SMTP ERROR:");
+    console.error(error);
+    console.error("CODE:", error.code);
+    console.error("RESPONSE:", error.response);
+    throw error;
   }
   
 };
@@ -103,14 +112,23 @@ export const sendForgotPasswordOtpEmail = async (to, otp) => {
   };
 
   try {
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+    console.log("SENDER_EMAIL:", process.env.SENDER_EMAIL);
+
     await transporter.verify();
     console.log("SMTP Connected Successfully");
+
     const info = await transporter.sendMail(mailOptions);
-    console.log('Forgot password email sent: %s', info.messageId);
+    console.log("Email sent:", info.messageId);
+
     return true;
   } catch (error) {
-    console.error('Error sending forgot password email:', error);
-    throw new Error('Failed to send forgot password OTP email');
+    console.error("FULL SMTP ERROR:");
+    console.error(error);
+    console.error("CODE:", error.code);
+    console.error("RESPONSE:", error.response);
+    throw error;
   }
   
 };
