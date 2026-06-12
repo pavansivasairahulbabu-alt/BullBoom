@@ -16,6 +16,7 @@ import {
   FaRedo
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { authApi } from '../../services/api';
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
@@ -75,26 +76,13 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send OTP');
-      }
-
+      const data = await authApi.sendOtp(email);
       // Move to OTP step
       setStep(2);
       setCountdown(59);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -105,25 +93,13 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend OTP');
-      }
+      await authApi.sendOtp(email);
 
       setCountdown(59);
       setOtp(['', '', '', '', '', '']);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
@@ -141,30 +117,14 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          otp: enteredOtp,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
-
+      await authApi.verifyOtp(email, enteredOtp);
       setOtpVerified(true);
       setTimeout(() => {
         setStep(3);
       }, 1000);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'OTP verification failed');
     } finally {
       setLoading(false);
     }
@@ -175,24 +135,12 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          password,
-        }),
+      const data = await authApi.signup({
+        fullName,
+        email,
+        phone,
+        password,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
-      }
 
       // Store token and user in localStorage
       localStorage.setItem('token', data.token);
@@ -201,7 +149,7 @@ export default function SignUpPage() {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }

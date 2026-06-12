@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaChartLine, FaChevronRight, FaTelegram } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { authApi } from '../../services/api';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,19 +33,7 @@ export default function LoginPage() {
         requestBody.phone = identifier;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
+      const data = await authApi.login(requestBody);
 
       // Store token and user in localStorage
       localStorage.setItem('token', data.token);
@@ -53,7 +42,7 @@ export default function LoginPage() {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }

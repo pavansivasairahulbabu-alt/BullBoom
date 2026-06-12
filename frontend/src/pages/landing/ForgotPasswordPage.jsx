@@ -10,6 +10,7 @@ import {
   FaRedo,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { authApi } from '../../services/api';
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1);
@@ -78,19 +79,11 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send OTP');
-      }
+      await authApi.sendForgotPasswordOtp(email);
       setStep(2);
       setCountdown(59);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -106,18 +99,10 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-forgot-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: enteredOtp }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
+      await authApi.verifyForgotPasswordOtp(email, enteredOtp);
       setStep(3);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'OTP verification failed');
     } finally {
       setLoading(false);
     }
@@ -140,18 +125,10 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: otp.join(''), newPassword }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to reset password');
-      }
+      await authApi.resetPassword({ email, otp: otp.join(''), newPassword });
       setStep(4);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -162,19 +139,11 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend OTP');
-      }
+      await authApi.sendForgotPasswordOtp(email);
       setCountdown(59);
       setOtp(['', '', '', '', '', '']);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
