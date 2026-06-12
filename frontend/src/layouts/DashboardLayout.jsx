@@ -1,6 +1,6 @@
 import Sidebar from "../components/Sidebar";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { FaHome, FaChartLine, FaBrain, FaClipboardList, FaUser } from "react-icons/fa";
+import { FaHome, FaChartLine, FaClipboardList, FaUser } from "react-icons/fa";
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -8,7 +8,6 @@ export default function DashboardLayout() {
   const bottomNavItems = [
     { path: "/dashboard", icon: <FaHome />, label: "Home" },
     { path: "/watchlist", icon: <FaChartLine />, label: "Watchlist" },
-    { path: "/analysis", icon: <FaBrain />, label: "AI" },
     { path: "/orders", icon: <FaClipboardList />, label: "Orders" },
     { path: "/profile", icon: <FaUser />, label: "Profile" },
   ];

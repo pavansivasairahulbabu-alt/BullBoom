@@ -6,11 +6,29 @@ import bcrypt from 'bcryptjs';
 import { generateOtp } from '../utils/generateOtp.js';
 import { sendOtpEmail, sendForgotPasswordOtpEmail } from '../services/emailService.js';
 import mongoose from "mongoose";
+
 // Generate JWT token
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
+};
+
+// Validate token
+export const validateToken = async (req, res) => {
+  try {
+    // Token is already validated by protect middleware and user is in req.user
+    res.status(200).json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    console.error('Validate token error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Unauthorized',
+    });
+  }
 };
 
 // Send OTP
@@ -104,7 +122,7 @@ export const verifyOtp = async (req, res) => {
 // Signup user
 export const signupUser = async (req, res) => {
   try {
-    const { fullName, email, phone, password, referralCode, otp } = req.body;
+    let { fullName, email, phone, password, referralCode, otp, tradingExperience, riskProfile } = req.body;
 
     // Basic validations
     if (!fullName) {
@@ -175,6 +193,33 @@ export const signupUser = async (req, res) => {
       });
     }
 
+    // Handle empty strings for tradingExperience and riskProfile
+    if (!tradingExperience || tradingExperience.trim() === '') {
+      tradingExperience = 'Beginner';
+    } else {
+      // Validate enum
+      const validTradingExperiences = ['Beginner', 'Intermediate', 'Advanced', 'Professional'];
+      if (!validTradingExperiences.includes(tradingExperience)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid trading experience value',
+        });
+      }
+    }
+
+    if (!riskProfile || riskProfile.trim() === '') {
+      riskProfile = 'Moderate Risk';
+    } else {
+      // Validate enum
+      const validRiskProfiles = ['Low Risk', 'Moderate Risk', 'High Risk', 'Aggressive'];
+      if (!validRiskProfiles.includes(riskProfile)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid risk profile value',
+        });
+      }
+    }
+
     // Create user
     const user = await User.create({
       fullName,
@@ -182,6 +227,8 @@ export const signupUser = async (req, res) => {
       phone,
       password,
       referralCode,
+      tradingExperience,
+      riskProfile,
       isVerified: true, // Mark as verified since OTP was verified
     });
 
@@ -250,6 +297,41 @@ export const loginUser = async (req, res) => {
         success: false,
         message: 'User not found',
       });
+    }
+
+    // Initialize wallet fields for old users if missing
+    let needsSave = false;
+    if (user.virtualBalance === undefined || user.virtualBalance === null) {
+      user.virtualBalance = 1500000;
+      needsSave = true;
+    }
+    if (user.availableBalance === undefined || user.availableBalance === null) {
+      user.availableBalance = 1500000;
+      needsSave = true;
+    }
+    if (user.investedAmount === undefined || user.investedAmount === null) {
+      user.investedAmount = 0;
+      needsSave = true;
+    }
+    if (user.portfolioValue === undefined || user.portfolioValue === null) {
+      user.portfolioValue = 1500000;
+      needsSave = true;
+    }
+    if (user.totalPnL === undefined || user.totalPnL === null) {
+      user.totalPnL = 0;
+      needsSave = true;
+    }
+    if (user.realizedPnL === undefined || user.realizedPnL === null) {
+      user.realizedPnL = 0;
+      needsSave = true;
+    }
+    if (user.unrealizedPnL === undefined || user.unrealizedPnL === null) {
+      user.unrealizedPnL = 0;
+      needsSave = true;
+    }
+
+    if (needsSave) {
+      await user.save();
     }
 
     // Check password

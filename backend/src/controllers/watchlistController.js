@@ -1,4 +1,5 @@
 import Watchlist from '../models/Watchlist.model.js';
+import { getMarketData } from '../services/marketDataProvider.js';
 
 // @desc    Add item to watchlist
 // @route   POST /api/watchlist/add
@@ -61,9 +62,24 @@ export const getWatchlist = async (req, res) => {
       watchlist = await Watchlist.find({ userId: req.user._id }).sort({ createdAt: -1 });
     }
 
+    // Get market data for each watchlist item
+    const watchlistWithPrices = await Promise.all(
+      watchlist.map(async (item) => {
+        const marketData = await getMarketData(item.symbol);
+        return {
+          ...item.toObject(),
+          price: marketData.price,
+          change: marketData.change,
+          changePercent: marketData.changePercent,
+          dayHigh: marketData.dayHigh,
+          dayLow: marketData.dayLow
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      watchlist
+      watchlist: watchlistWithPrices
     });
   } catch (error) {
     console.error('Get watchlist error:', error);

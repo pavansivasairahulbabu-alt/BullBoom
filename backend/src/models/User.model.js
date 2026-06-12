@@ -56,18 +56,25 @@ const userSchema = new mongoose.Schema(
     tradingExperience: {
       type: String,
       enum: ['Beginner', 'Intermediate', 'Advanced', 'Professional'],
-      default: '',
+      default: 'Beginner',
     },
     riskProfile: {
       type: String,
       enum: ['Low Risk', 'Moderate Risk', 'High Risk', 'Aggressive'],
-      default: '',
+      default: 'Moderate Risk',
     },
     membership: {
       type: String,
       enum: ['Free', 'Basic', 'Premium', 'Pro'],
       default: 'Free',
     },
+    virtualBalance: { type: Number, default: 1500000, min: 0 }, // ₹15L virtual capital
+    investedAmount: { type: Number, default: 0, min: 0 },
+    availableBalance: { type: Number, default: 1500000, min: 0 },
+    portfolioValue: { type: Number, default: 1500000 },
+    totalPnL: { type: Number, default: 0 },
+    realizedPnL: { type: Number, default: 0 },
+    unrealizedPnL: { type: Number, default: 0 }
   },
   {
     timestamps: true,

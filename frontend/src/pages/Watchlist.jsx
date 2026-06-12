@@ -1,16 +1,16 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FaSearch,
   FaPlus,
   FaTrash,
   FaChartArea,
-  FaRobot,
   FaTimes,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import api, { orderApi } from '../services/api';
 
 // --- Common Indian Stocks & Indices ---
 const COMMON_SYMBOLS = [
@@ -36,60 +36,13 @@ const COMMON_SYMBOLS = [
   'HCLTECH',
 ];
 
-// --- Mock Market Data Generator ---
-const generateMockPriceData = (symbol, basePrice = null) => {
-  let price;
-  if (basePrice) {
-    const volatility = basePrice * 0.001; // 0.1% volatility
-    const change = (Math.random() - 0.5) * 2 * volatility;
-    price = parseFloat((basePrice + change).toFixed(2));
-  } else {
-    // Base prices for common symbols
-    const basePrices = {
-      'NIFTY': 23200,
-      'BANKNIFTY': 54800,
-      'RELIANCE': 2850,
-      'INFY': 1850,
-      'TCS': 4000,
-      'HDFCBANK': 1750,
-      'ICICIBANK': 1200,
-      'SBIN': 850,
-      'HINDUNILVR': 2600,
-      'ITC': 450,
-      'TATAMOTORS': 700,
-      'MARUTI': 12500,
-      'ASIANPAINT': 3400,
-      'WIPRO': 450,
-      'BHARTIARTL': 1500,
-      'AXISBANK': 1250,
-      'KOTAKBANK': 1800,
-      'BAJFINANCE': 8500,
-      'BAJAJFINSV': 1600,
-      'HCLTECH': 1600,
-    };
-    price = basePrices[symbol] || (Math.random() * 500 + 100);
-  }
-
-  const baseLTP = price;
-  const change = parseFloat((baseLTP * (Math.random() * 0.02 - 0.01)).toFixed(2));
-  const changePercent = parseFloat(((change / baseLTP) * 100).toFixed(2));
-
-  return {
-    ltp: baseLTP,
-    change: change,
-    changePercent: changePercent,
-  };
-};
-
 // --- Watchlist Row Component ---
 const WatchlistRow = ({
   item,
-  priceData,
   onDelete,
   onBuy,
   onSell,
   onChart,
-  onAIAnalysis,
 }) => {
   return (
     <motion.tr
@@ -100,12 +53,12 @@ const WatchlistRow = ({
     >
       <td className="py-4 font-semibold">{item.symbol}</td>
       <td className="py-4 text-[#B8C0D4]">{item.exchange}</td>
-      <td className="py-4 font-semibold">{priceData?.ltp || '-'}</td>
-      <td className={`py-4 font-semibold ${priceData?.change >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
-        {priceData?.change >= 0 ? '+' : ''}{priceData?.change || '-'}
+      <td className="py-4 font-semibold">{item.price?.toFixed(2) || '-'}</td>
+      <td className={`py-4 font-semibold ${item.change >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+        {item.change >= 0 ? '+' : ''}{item.change?.toFixed(2) || '-'}
       </td>
-      <td className={`py-4 font-semibold ${priceData?.changePercent >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
-        {priceData?.changePercent >= 0 ? '+' : ''}{priceData?.changePercent || '-'}%
+      <td className={`py-4 font-semibold ${item.changePercent >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+        {item.changePercent >= 0 ? '+' : ''}{item.changePercent?.toFixed(2) || '-'}%
       </td>
       <td className="py-4">
         <div className="flex items-center gap-2">
@@ -122,13 +75,6 @@ const WatchlistRow = ({
             title="Sell"
           >
             S
-          </button>
-          <button
-            onClick={() => onAIAnalysis(item)}
-            className="flex items-center justify-center w-8 h-8 rounded bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all"
-            title="AI Analysis"
-          >
-            <FaRobot className="w-4 h-4" />
           </button>
           <button
             onClick={() => onChart(item)}
@@ -294,13 +240,105 @@ const DeleteConfirmModal = ({ isOpen, onClose, item, onConfirm }) => {
   );
 };
 
+// --- Buy Modal ---
+const BuyModal = ({ isOpen, onClose, item, onSuccess }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen || !item) return null;
+
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      const response = await orderApi.buy({
+        symbol: item.symbol,
+        quantity: quantity,
+        exchange: item.exchange
+      });
+
+      if (response.data.success) {
+        toast.success(`Buy order executed successfully!`);
+        onSuccess();
+        onClose();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to place buy order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold">Buy {item.symbol}</h3>
+          <button onClick={onClose} className="text-[#B8C0D4] hover:text-white transition-colors">
+            <FaTimes className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-[#B8C0D4] mb-1 block">Exchange</label>
+            <input
+              type="text"
+              disabled
+              value={item.exchange}
+              className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-[#B8C0D4]"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#B8C0D4] mb-1 block">Quantity</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+              min="1"
+              className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+            />
+          </div>
+          <div className="bg-[#050816] rounded-xl p-4 border border-white/10">
+            <div className="flex justify-between text-sm">
+              <span className="text-[#B8C0D4]">Current Price</span>
+              <span className="font-semibold">₹{item.price?.toFixed(2) || '-'}</span>
+            </div>
+            <div className="flex justify-between text-sm mt-2">
+              <span className="text-[#B8C0D4]">Estimated Cost</span>
+              <span className="font-semibold">₹{(item.price * quantity).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white hover:bg-[#050816]/80 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleBuy}
+            disabled={loading}
+            className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold hover:shadow-[0_0_20px_rgba(50,205,50,0.3)] transition-all"
+          >
+            {loading ? 'Placing Order...' : 'Buy'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export default function Watchlist() {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [priceDataMap, setPriceDataMap] = useState({});
+  const [itemToBuy, setItemToBuy] = useState(null);
   const navigate = useNavigate();
 
   const fetchWatchlist = async () => {
@@ -309,12 +347,6 @@ export default function Watchlist() {
       const response = await api.get('/watchlist');
       if (response.data.success) {
         setWatchlist(response.data.watchlist);
-        // Initialize price data for all items
-        const initialData = {};
-        response.data.watchlist.forEach((item) => {
-          initialData[item._id] = generateMockPriceData(item.symbol);
-        });
-        setPriceDataMap(initialData);
       }
     } catch (error) {
       console.error('Error fetching watchlist:', error);
@@ -355,19 +387,15 @@ export default function Watchlist() {
   };
 
   const handleBuy = (item) => {
-    navigate(`/orders?type=buy&symbol=${item.symbol}`);
+    setItemToBuy(item);
   };
 
   const handleSell = (item) => {
-    navigate(`/orders?type=sell&symbol=${item.symbol}`);
+    navigate('/positions');
   };
 
   const handleChart = (item) => {
     navigate(`/chart/${item.symbol}`);
-  };
-
-  const handleAIAnalysis = (item) => {
-    navigate(`/analysis/${item.symbol}`);
   };
 
   const filteredWatchlist = useMemo(() => {
@@ -378,29 +406,14 @@ export default function Watchlist() {
     );
   }, [watchlist, searchQuery]);
 
-  // --- Auto-update Mock Data ---
+  // --- Auto-update ---
   useEffect(() => {
     fetchWatchlist();
   }, []);
 
   useEffect(() => {
     if (watchlist.length === 0) return;
-    const interval = setInterval(() => {
-      setPriceDataMap((prev) => {
-        const newData = { ...prev };
-        watchlist.forEach((item) => {
-          if (newData[item._id]) {
-            newData[item._id] = generateMockPriceData(
-              item.symbol,
-              newData[item._id].ltp
-            );
-          } else {
-            newData[item._id] = generateMockPriceData(item.symbol);
-          }
-        });
-        return newData;
-      });
-    }, 3000); // Update every 3 seconds
+    const interval = setInterval(fetchWatchlist, 3000); // Update every 3 seconds
     return () => clearInterval(interval);
   }, [watchlist]);
 
@@ -483,12 +496,10 @@ export default function Watchlist() {
                     <WatchlistRow
                       key={item._id}
                       item={item}
-                      priceData={priceDataMap[item._id]}
                       onDelete={() => setItemToDelete(item)}
                       onBuy={handleBuy}
                       onSell={handleSell}
                       onChart={handleChart}
-                      onAIAnalysis={handleAIAnalysis}
                     />
                   ))}
                 </tbody>
@@ -509,6 +520,12 @@ export default function Watchlist() {
         onClose={() => setItemToDelete(null)}
         item={itemToDelete}
         onConfirm={handleDeleteFromWatchlist}
+      />
+      <BuyModal
+        isOpen={itemToBuy !== null}
+        onClose={() => setItemToBuy(null)}
+        item={itemToBuy}
+        onSuccess={fetchWatchlist}
       />
     </div>
   );

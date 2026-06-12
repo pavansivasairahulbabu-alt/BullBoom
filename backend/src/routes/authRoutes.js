@@ -6,7 +6,8 @@ import {
   verifyOtp,
   sendForgotPasswordOtp,
   verifyForgotPasswordOtp,
-  resetPassword
+  resetPassword,
+  validateToken
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -33,6 +34,7 @@ router.post('/signup', signupUser);
 // Login route
 router.post('/login', loginUser);
 
-
+// Validate token
+router.get('/validate', protect, validateToken);
 
 export default router;

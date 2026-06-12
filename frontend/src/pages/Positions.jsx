@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { positionService } from '../services/positionService.js';
+import { positionApi, orderApi } from '../services/api.js';
 
 // Helper to format numbers
 const formatNumber = (num) => {
@@ -28,6 +28,7 @@ export default function Positions() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [addForm, setAddForm] = useState({
     symbol: '',
@@ -42,14 +43,15 @@ export default function Positions() {
     quantity: '',
     status: ''
   });
+  const [sellForm, setSellForm] = useState({ quantity: 1, loading: false });
 
   // Fetch positions
   const fetchPositions = async () => {
     try {
       setLoading(true);
-      const data = await positionService.getPositions();
-      if (data.success) {
-        setPositions(data.positions);
+      const res = await positionApi.getPositions();
+      if (res.data.success) {
+        setPositions(res.data.positions);
       }
     } catch (error) {
       console.error('Error fetching positions:', error);
@@ -61,6 +63,9 @@ export default function Positions() {
 
   useEffect(() => {
     fetchPositions();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchPositions, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Calculate portfolio summary
@@ -103,7 +108,7 @@ export default function Positions() {
   const handleAddPosition = async (e) => {
     e.preventDefault();
     try {
-      await positionService.createPosition(addForm);
+      await positionApi.createPosition(addForm);
       toast.success('Position added successfully');
       setIsAddModalOpen(false);
       setAddForm({
@@ -126,7 +131,7 @@ export default function Positions() {
     e.preventDefault();
     if (!selectedPosition) return;
     try {
-      await positionService.updatePosition(selectedPosition._id, editForm);
+      await positionApi.updatePosition(selectedPosition._id, editForm);
       toast.success('Position updated successfully');
       setIsEditModalOpen(false);
       setSelectedPosition(null);
@@ -137,10 +142,33 @@ export default function Positions() {
     }
   };
 
-  // Handle close position
+  // Handle sell position
+  const handleSellPosition = async () => {
+    if (!selectedPosition) return;
+    setSellForm(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await orderApi.sell({
+        positionId: selectedPosition._id,
+        quantity: Number(sellForm.quantity)
+      });
+      if (res.data.success) {
+        toast.success('Position sold successfully');
+        setIsSellModalOpen(false);
+        setSelectedPosition(null);
+        fetchPositions();
+      }
+    } catch (error) {
+      console.error('Error selling position:', error);
+      toast.error(error.response?.data?.message || 'Failed to sell position');
+    } finally {
+      setSellForm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Handle close position (manual close)
   const handleClosePosition = async (position) => {
     try {
-      await positionService.deletePosition(position._id);
+      await positionApi.deletePosition(position._id);
       toast.success('Position closed successfully');
       fetchPositions();
     } catch (error) {
@@ -363,6 +391,19 @@ export default function Positions() {
                               title="Edit"
                             >
                               <FaEdit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {pos.status === 'OPEN' && (
+                            <button
+                              onClick={() => {
+                                setSelectedPosition(pos);
+                                setSellForm({ quantity: pos.quantity, loading: false });
+                                setIsSellModalOpen(true);
+                              }}
+                              className="flex items-center justify-center w-8 h-8 rounded bg-red-500 text-white font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all"
+                              title="Sell"
+                            >
+                              S
                             </button>
                           )}
                           {pos.status === 'OPEN' && (
@@ -634,6 +675,88 @@ export default function Positions() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Sell Position Modal */}
+      {isSellModalOpen && selectedPosition && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Sell {selectedPosition.symbol}</h3>
+              <button onClick={() => setIsSellModalOpen(false)} className="text-[#B8C0D4] hover:text-white transition-colors">
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-[#050816] rounded-xl p-4 border border-white/10">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#B8C0D4]">Symbol</span>
+                  <span className="font-semibold">{selectedPosition.symbol}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#B8C0D4]">Quantity Available</span>
+                  <span>{selectedPosition.quantity}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#B8C0D4]">Entry Price</span>
+                  <span>₹{formatNumber(selectedPosition.entryPrice)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B8C0D4]">Current Price</span>
+                  <span>₹{formatNumber(selectedPosition.currentPrice)}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-[#B8C0D4] mb-1 block">Quantity to Sell</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  max={selectedPosition.quantity}
+                  value={sellForm.quantity}
+                  onChange={(e) => setSellForm({ ...sellForm, quantity: Number(e.target.value) })}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                />
+              </div>
+
+              <div className="bg-[#050816] rounded-xl p-4 border border-white/10">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#B8C0D4]">Estimated P&L</span>
+                  <span className={`font-semibold ${((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity) >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+                    {((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity) >= 0 ? '+' : ''}₹{formatNumber((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B8C0D4]">Estimated Value</span>
+                  <span className="font-semibold">₹{formatNumber(selectedPosition.currentPrice * sellForm.quantity)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsSellModalOpen(false)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white hover:bg-[#050816]/80 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSellPosition}
+                  disabled={sellForm.loading}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all"
+                >
+                  {sellForm.loading ? 'Selling...' : 'Sell Position'}
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}

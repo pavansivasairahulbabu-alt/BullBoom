@@ -3,11 +3,25 @@ import {
   getOrders,
   createOrder,
   deleteOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  buyOrder,
+  sellOrder,
+  getTradeHistory,
+  getPrice
 } from '../controllers/orderController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Execute Buy/Sell orders
+router.post('/buy', protect, buyOrder);
+router.post('/sell', protect, sellOrder);
+
+// Market Price
+router.get('/price/:symbol', protect, getPrice);
+
+// Trade History
+router.get('/history', protect, getTradeHistory);
 
 router.route('/')
   .get(protect, getOrders)

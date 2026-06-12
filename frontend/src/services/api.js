@@ -33,6 +33,7 @@ api.interceptors.response.use(
         case 401:
           toast.error('Unauthorized. Please login again.');
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
           window.location.href = '/login';
           break;
         case 403:
@@ -55,6 +56,43 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Dashboard API
+export const dashboardApi = {
+  getDashboard: () => api.get('/user/dashboard')
+};
+
+// Auth API
+export const authApi = {
+  sendOtp: (email) => api.post('/auth/send-otp', { email }),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
+  signup: (data) => api.post('/auth/signup', data),
+  login: (data) => api.post('/auth/login', data),
+  sendForgotPasswordOtp: (email) => api.post('/auth/forgot-password', { email }),
+  verifyForgotPasswordOtp: (email, otp) => api.post('/auth/verify-forgot-otp', { email, otp }),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  validateToken: () => api.get('/auth/validate')
+};
+
+// Orders & Trading API
+export const orderApi = {
+  buy: (data) => api.post('/orders/buy', data),
+  sell: (data) => api.post('/orders/sell', data),
+  getOrders: () => api.get('/orders'),
+  getHistory: () => api.get('/orders/history'),
+  getPrice: (symbol) => api.get(`/orders/price/${symbol}`),
+  deleteOrder: (id) => api.delete(`/orders/${id}`),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status })
+};
+
+// Positions API
+export const positionApi = {
+  getPositions: () => api.get('/positions'),
+  getPositionById: (id) => api.get(`/positions/${id}`),
+  createPosition: (data) => api.post('/positions', data),
+  updatePosition: (id, data) => api.put(`/positions/${id}`, data),
+  deletePosition: (id) => api.delete(`/positions/${id}`)
+};
 
 // Education API functions
 export const educationApi = {

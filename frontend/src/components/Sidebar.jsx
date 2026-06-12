@@ -2,11 +2,9 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaHome,
   FaChartLine,
-  FaBrain,
   FaClipboardList,
   FaBriefcase,
   FaBook,
-  FaCog,
   FaUser,
   FaSignOutAlt,
 } from 'react-icons/fa';
@@ -18,12 +16,10 @@ export default function Sidebar() {
   const menuItems = [
     { path: "/dashboard", icon: <FaHome />, label: "Dashboard" },
     { path: "/watchlist", icon: <FaChartLine />, label: "Watchlist" },
-    { path: "/analysis", icon: <FaBrain />, label: "AI Analysis" },
     { path: "/orders", icon: <FaClipboardList />, label: "Orders" },
     { path: "/positions", icon: <FaBriefcase />, label: "Positions" },
     { path: "/education", icon: <FaBook />, label: "Learning Hub" },
     { path: "/profile", icon: <FaUser />, label: "Profile" },
-    { path: "/community", icon: <FaCog />, label: "Settings" },
   ];
 
   return (

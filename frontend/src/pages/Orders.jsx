@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { orderService } from '../services/orderService.js';
+import { orderApi } from '../services/api.js';
 import { useSearchParams } from 'react-router-dom';
 
 // --- Status Colors ---
@@ -49,9 +49,9 @@ export default function Orders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const data = await orderService.getOrders();
-      if (data.success) {
-        setOrders(data.orders);
+      const res = await orderApi.getOrders();
+      if (res.data.success) {
+        setOrders(res.data.orders);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -76,6 +76,9 @@ export default function Orders() {
     }
 
     fetchOrders();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchOrders, 5000);
+    return () => clearInterval(interval);
   }, [searchParams]);
 
   // --- Statistics Calculations ---
@@ -117,7 +120,7 @@ export default function Orders() {
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     try {
-      await orderService.createOrder(createForm);
+      await orderApi.createOrder(createForm);
       toast.success('Order placed successfully!');
       setIsCreateModalOpen(false);
       setCreateForm({ symbol: '', exchange: 'NSE', orderType: 'BUY', quantity: '', price: '' });
@@ -132,7 +135,7 @@ export default function Orders() {
   const handleDeleteOrder = async () => {
     if (!selectedOrder) return;
     try {
-      await orderService.deleteOrder(selectedOrder._id);
+      await orderApi.deleteOrder(selectedOrder._id);
       toast.success('Order deleted!');
       setIsDeleteConfirmOpen(false);
       setSelectedOrder(null);
@@ -146,7 +149,7 @@ export default function Orders() {
   // --- Handle Update Order Status ---
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await orderService.updateOrderStatus(orderId, newStatus);
+      await orderApi.updateStatus(orderId, newStatus);
       toast.success('Order status updated!');
       fetchOrders();
     } catch (error) {

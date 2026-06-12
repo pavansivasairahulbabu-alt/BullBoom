@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getDashboard,
   getProfile,
   updateProfile,
   uploadProfileImage,
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // All routes are protected
 router.use(protect);
+
+// Get dashboard data
+router.get('/dashboard', getDashboard);
 
 // Get user profile
 router.get('/profile', getProfile);

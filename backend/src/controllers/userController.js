@@ -1,5 +1,27 @@
 import User from '../models/User.model.js';
 import cloudinary from '../../config/cloudinary.js';
+import { getDashboardStats } from '../services/dashboard.service.js';
+
+// @desc    Get dashboard data
+// @route   GET /api/user/dashboard
+// @access  Private
+export const getDashboard = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const stats = await getDashboardStats(userId);
+    
+    res.status(200).json({
+      success: true,
+      ...stats
+    });
+  } catch (error) {
+    console.error('Get dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
 
 // @desc    Get logged-in user profile
 // @route   GET /api/user/profile
@@ -25,7 +47,7 @@ export const getProfile = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName, username, phone, location, tradingExperience, riskProfile } = req.body;
+    let { fullName, username, phone, location, tradingExperience, riskProfile } = req.body;
 
     // Validate inputs
     if (fullName && fullName.length < 3) {
@@ -63,6 +85,31 @@ export const updateProfile = async (req, res) => {
       }
     }
 
+    // Handle empty strings for tradingExperience and riskProfile
+    if (tradingExperience === '') tradingExperience = undefined;
+    if (riskProfile === '') riskProfile = undefined;
+
+    // Validate enums if provided
+    if (tradingExperience) {
+      const validTradingExperiences = ['Beginner', 'Intermediate', 'Advanced', 'Professional'];
+      if (!validTradingExperiences.includes(tradingExperience)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid trading experience value',
+        });
+      }
+    }
+
+    if (riskProfile) {
+      const validRiskProfiles = ['Low Risk', 'Moderate Risk', 'High Risk', 'Aggressive'];
+      if (!validRiskProfiles.includes(riskProfile)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid risk profile value',
+        });
+      }
+    }
+
     // Update user (DO NOT update profileImage here)
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
@@ -71,8 +118,8 @@ export const updateProfile = async (req, res) => {
         ...(username && { username }),
         ...(phone && { phone }),
         ...(location !== undefined && { location }),
-        ...(tradingExperience && { tradingExperience }),
-        ...(riskProfile && { riskProfile }),
+        ...(tradingExperience !== undefined && { tradingExperience }),
+        ...(riskProfile !== undefined && { riskProfile }),
       },
       { new: true, runValidators: true }
     ).select('-password');
