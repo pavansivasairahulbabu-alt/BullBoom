@@ -175,7 +175,7 @@ export default function LoginPage() {
               <div className="mb-8">
                 <h2 className="text-3xl sm:text-4xl font-black mb-3">Welcome Back, Trader</h2>
                 <p className="text-[#B8C0D4] text-lg">
-                  Continue your trading journey with AI-powered market intelligence, smart analysis, and risk management tools.
+                  Continue your trading journey with comprehensive education, smart tracking, and risk management tools.
                 </p>
               </div>
 

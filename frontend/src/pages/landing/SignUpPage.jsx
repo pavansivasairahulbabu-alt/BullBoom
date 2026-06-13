@@ -359,7 +359,7 @@ export default function SignUpPage() {
               {/* Feature Highlights */}
               <div className="grid grid-cols-2 gap-3 mb-8">
                 {[
-                  "AI Trade Analysis",
+                  "Trade Tracking & Journaling",
                   "Smart Market Watchlists",
                   "Risk Management Tools",
                   "Trading Psychology Insights",
@@ -518,7 +518,7 @@ export default function SignUpPage() {
                   </div>
 
                   {/* Referral Code */}
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <div className="flex items-center gap-3 px-4 py-4 rounded-xl bg-[#050816] border border-white/10 focus-within:border-[#32CD32]/50 focus-within:shadow-[0_0_20px_rgba(50,205,50,0.15)] transition-all">
                       <FaGift className="text-[#32CD32] w-4 h-4" />
                       <input
@@ -529,7 +529,7 @@ export default function SignUpPage() {
                         className="flex-1 bg-transparent text-white outline-none placeholder:text-[#B8C0D4]/50"
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Terms Checkbox */}
                   <div className="flex items-start gap-2">

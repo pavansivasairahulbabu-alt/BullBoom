@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaTelegram, FaLinkedin, FaInstagram, FaTwitter, FaChartLine, FaBrain, FaBookOpen, FaShieldAlt, FaArrowRight, FaCheckCircle, FaChevronDown, FaChevronUp, FaBars, FaTimes } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaTelegram, FaLinkedin, FaInstagram, FaTwitter, FaChartLine, FaBookOpen, FaShieldAlt, FaArrowRight, FaCheckCircle, FaChevronDown, FaChevronUp, FaBars, FaTimes, FaClipboardList } from 'react-icons/fa';
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(null);
@@ -77,15 +78,12 @@ export default function LandingPage() {
                 Dominate Markets.
               </h1>
               <p className="text-[#B8C0D4] text-lg sm:text-xl max-w-2xl">
-                AI-powered trade analysis, smart watchlists, option learning, market insights, and risk management — all in one platform.
+                Smart watchlists, option learning, market insights, and risk management — all in one platform.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link to="/signup" className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-bold text-lg hover:shadow-[0_0_40px_rgba(127,255,0,0.5)] hover:scale-105 transition-all flex items-center gap-2">
                   Start Free <FaArrowRight />
                 </Link>
-                <button className="px-8 py-4 rounded-xl border-2 border-[#FFD700] text-[#FFD700] font-bold text-lg hover:bg-[#FFD700]/10 hover:shadow-[0_0_40px_rgba(255,215,0,0.3)] transition-all">
-                  Watch Demo
-                </button>
               </div>
               {/* <div className="grid grid-cols-2 gap-4 pt-4">
                 <div className="flex items-center gap-2 text-[#B8C0D4]">
@@ -119,12 +117,12 @@ export default function LandingPage() {
       </section>
 
       {/* WHY BULL BOOM */}
-      <section id="features" className="py-20 bg-[#0B1220]">
+      {/* <section id="features" className="py-20 bg-[#0B1220]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Why Traders Choose Bull Boom</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: <FaBrain />, title: "AI Trade Analysis", desc: "Analyze every trade using AI and discover mistakes." },
+              { icon: <FaClipboardList />, title: "Trade Tracking & Journaling", desc: "Track every trade and build discipline." },
               { icon: <FaChartLine />, title: "Smart Watchlists", desc: "Track stocks, indices, futures, and options." },
               { icon: <FaBookOpen />, title: "Learn Options Trading", desc: "Master F&O through bite-sized lessons." },
               { icon: <FaShieldAlt />, title: "Risk Management", desc: "Build discipline and protect capital." }
@@ -142,33 +140,59 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* PLATFORM PREVIEW */}
+      {/* KEY BENEFITS */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex gap-4 mb-6 flex-wrap justify-center">
-              <span className="px-4 py-2 rounded-full bg-[#32CD32]/10 border border-[#32CD32]/30 text-[#32CD32] text-sm font-semibold">
-                +85% Better Trade Decisions
-              </span>
-              <span className="px-4 py-2 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-sm font-semibold">
-                Real-Time Tracking
-              </span>
-              <span className="px-4 py-2 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/30 text-[#39FF14] text-sm font-semibold">
-                AI Powered
-              </span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-[#0B1220] to-[#050816] p-4 sm:p-8 rounded-3xl border border-white/10">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {["Watchlist", "AI Analysis", "Orders", "Learning"].map((tab, i) => (
-                <div key={i} className="bg-[#050816] p-4 rounded-xl border border-white/5">
-                  <div className="text-sm font-semibold text-[#32CD32] mb-2">{tab}</div>
-                  <div className="h-32 bg-gradient-to-br from-[#0B1220] to-[#050816] rounded-lg"></div>
-                </div>
-              ))}
-            </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">Why Choose Bull Boom?</h2>
+          <p className="text-[#B8C0D4] text-lg text-center mb-12 max-w-2xl mx-auto">Everything you need to become a consistent, disciplined trader</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: "📚",
+                title: "Structured Learning",
+                desc: "Step-by-step courses designed for every skill level, from beginner to advanced trader"
+              },
+              {
+                icon: "📝",
+                title: "Trade Journaling",
+                desc: "Track every trade, analyze mistakes, and improve your decision-making process"
+              },
+              {
+                icon: "📊",
+                title: "Smart Watchlist",
+                desc: "Monitor your favorite stocks and options with real-time market data"
+              },
+              {
+                icon: "🎯",
+                title: "Risk Management",
+                desc: "Learn to protect your capital and manage risk like a professional trader"
+              },
+              {
+                icon: "🏆",
+                title: "Progress Tracking",
+                desc: "Earn achievements and certificates as you complete courses and modules"
+              },
+              {
+                icon: "👥",
+                title: "Community Focus",
+                desc: "Connect with other traders, share insights, and grow together"
+              }
+            ].map((benefit, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-gradient-to-br from-[#0B1220] to-[#050816] p-6 rounded-2xl border border-white/5 hover:border-[#32CD32]/30 hover:shadow-[0_0_40px_rgba(50,205,50,0.1)] transition-all"
+              >
+                <div className="text-4xl mb-4">{benefit.icon}</div>
+                <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
+                <p className="text-[#B8C0D4]">{benefit.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -203,38 +227,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* AI ANALYSIS */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl sm:text-5xl font-black mb-6">
-                Meet <span className="bg-gradient-to-r from-[#32CD32] to-[#39FF14] bg-clip-text text-transparent">Bull Boom AI</span>
-              </h2>
-              <p className="text-[#B8C0D4] text-lg mb-8">
-                Our AI studies your trades, identifies mistakes, tracks performance, and helps improve decision making.
-              </p>
-              <div className="space-y-4">
-                {["Trade Score", "Risk Score", "Win Rate Analysis", "Behavior Insights"].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-[#B8C0D4]">
-                    <div className="w-2 h-2 rounded-full bg-[#32CD32]"></div>
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-[#0B1220] to-[#050816] p-6 rounded-3xl border border-white/10">
-                <div className="h-64 flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full border-4 border-dashed border-[#32CD32]/30 flex items-center justify-center animate-spin-slow">
-                    <FaBrain className="text-[#32CD32] w-16 h-16" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* PRICING */}
       {/* <section id="pricing" className="py-20 bg-[#0B1220]">
@@ -298,7 +291,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { name: "Raj Patel", role: "Options Trader", text: "Improved my trade discipline significantly." },
-              { name: "Priya Sharma", role: "Day Trader", text: "The AI analysis is a game changer." },
+              { name: "Priya Sharma", role: "Day Trader", text: "The learning modules are fantastic!" },
               { name: "Amit Kumar", role: "Swing Trader", text: "Best learning platform for F&O." }
             ].map((t, i) => (
               <div key={i} className="bg-gradient-to-br from-[#0B1220] to-[#050816] p-6 rounded-2xl border border-white/5">
@@ -324,8 +317,8 @@ export default function LandingPage() {
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {[
-              { q: "What is Bull Boom?", a: "Bull Boom is an AI-powered trading platform that helps you analyze trades, manage risk, and learn options trading." },
-              { q: "How does AI Analysis work?", a: "Our AI tracks your trading behavior, identifies patterns, and provides actionable insights to improve your decisions." },
+              { q: "What is Bull Boom?", a: "Bull Boom is a trading education and practice platform that helps you track trades, manage risk, and learn options trading." },
+              { q: "How does Trade Tracking work?", a: "Our trade journal helps you record every trade, analyze performance, and identify areas for improvement." },
               { q: "Can beginners use Bull Boom?", a: "Absolutely! We have bite-sized learning modules designed specifically for beginners." },
               { q: "What markets are supported?", a: "We support stocks, indices, futures, and options across major exchanges." }
             ].map((faq, i) => (
@@ -359,15 +352,15 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h2 className="text-3xl sm:text-5xl font-black mb-6">Ready to Bull Into Profits?</h2>
           <p className="text-[#B8C0D4] text-xl mb-10">
-            Join thousands of traders improving their decisions with AI.
+            Join thousands of traders improving their skills and discipline.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/signup" className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-bold text-lg hover:shadow-[0_0_40px_rgba(127,255,0,0.5)] hover:scale-105 transition-all">
               Start Free
             </Link>
-            <Link to="/signup" className="px-8 py-4 rounded-xl border-2 border-[#FFD700] text-[#FFD700] font-bold text-lg hover:bg-[#FFD700]/10 transition-all">
+            {/* <Link to="/signup" className="px-8 py-4 rounded-xl border-2 border-[#FFD700] text-[#FFD700] font-bold text-lg hover:bg-[#FFD700]/10 transition-all">
               Get Premium
-            </Link>
+            </Link> */}
           </div>
         </div>
       </section>
@@ -378,20 +371,19 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#32CD32] to-[#39FF14] flex items-center justify-center">
-                  <FaChartLine className="text-[#050816] w-6 h-6" />
-                </div>
+                <img src="/BullBoom.jpeg" alt="Bull Boom" className="w-10 h-10 rounded-xl object-cover" />
                 <span className="text-xl font-bold">Bull Boom</span>
               </div>
-              <p className="text-[#B8C0D4] text-sm">Trade smarter with AI-powered analysis.</p>
+              <p className="text-[#B8C0D4] text-sm">Trade smarter with complete education and tracking tools.</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-[#B8C0D4] text-sm">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+                <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">Login</Link></li>
+                <li><Link to="/signup" className="hover:text-white transition-colors">Sign Up</Link></li>
               </ul>
             </div>
             <div>
@@ -418,16 +410,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* Custom Styles */}
-      <style>{`
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 10s linear infinite;
-        }
-      `}</style>
+
     </div>
   );
 }
