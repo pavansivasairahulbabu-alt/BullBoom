@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 
 // Create transporter
 const createTransporter = () => {
+  console.log("Creating SMTP transporter...");
   return nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
@@ -128,7 +129,7 @@ export const sendForgotPasswordOtpEmail = async (to, otp) => {
     console.error(error);
     console.error("CODE:", error.code);
     console.error("RESPONSE:", error.response);
-    throw error;
+    throw new Error("Failed to send OTP email");
   }
   
 };
