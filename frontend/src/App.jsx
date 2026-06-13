@@ -9,8 +9,8 @@ function App() {
       if (token) {
         try {
           const response = await authApi.validateToken();
-          if (response.data.success) {
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+          if (response.success) {
+            localStorage.setItem('user', JSON.stringify(response.user));
           }
         } catch (error) {
           console.error('Token validation failed:', error);

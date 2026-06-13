@@ -246,7 +246,7 @@ export default function SignUpPage() {
                       <h2 className="text-xl font-bold bg-gradient-to-r from-[#32CD32] to-[#39FF14] bg-clip-text text-transparent">
                         Bull Boom
                       </h2>
-                      <p className="text-xs text-[#B8C0D4]">AI Trading Platform</p>
+                      <p className="text-xs text-[#B8C0D4]">Trading Education Platform</p>
                     </div>
                   </div>
 
@@ -272,7 +272,7 @@ export default function SignUpPage() {
               <div className="mb-8">
                 <h3 className="text-3xl sm:text-4xl font-black mb-3">Start Your Trading Journey</h3>
                 <p className="text-[#B8C0D4] text-lg">
-                  Join thousands of traders using AI-powered analysis, smart risk management, and advanced market insights to make better trading decisions.
+                  Join thousands of traders using smart risk management, advanced market insights, and comprehensive education to improve their trading skills.
                 </p>
               </div>
 
@@ -281,7 +281,7 @@ export default function SignUpPage() {
                 {[
                   { value: "25K+", label: "Registered Traders" },
                   { value: "1M+", label: "Trades Analyzed" },
-                  { value: "95%", label: "AI Accuracy" },
+                  { value: "95%", label: "Learner Success" },
                   { value: "₹100Cr+", label: "Trading Volume" },
                 ].map((stat, i) => (
                   <motion.div
@@ -304,7 +304,7 @@ export default function SignUpPage() {
               {/* Feature Highlights */}
               <div className="grid grid-cols-2 gap-3 mb-8">
                 {[
-                  "AI Trade Analysis",
+                  "Trade Tracking & Journaling",
                   "Smart Market Watchlists",
                   "Risk Management Tools",
                   "Trading Psychology Insights",

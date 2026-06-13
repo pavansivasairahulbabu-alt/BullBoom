@@ -164,7 +164,7 @@ export default function LoginPage() {
               <div className="mb-8">
                 <h2 className="text-3xl sm:text-4xl font-black mb-3">Welcome Back, Trader</h2>
                 <p className="text-[#B8C0D4] text-lg">
-                  Continue your trading journey with AI-powered market intelligence, smart analysis, and risk management tools.
+                  Continue your trading journey with comprehensive education, smart tracking, and risk management tools.
                 </p>
               </div>
 
@@ -172,7 +172,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-3 gap-4">
                 {[
                   { value: "10K+", label: "Active Traders" },
-                  { value: "95%", label: "AI Accuracy" },
+                  { value: "95%", label: "Learner Success" },
                   { value: "₹50Cr+", label: "Trades Analyzed" },
                 ].map((stat, i) => (
                   <motion.div
@@ -211,7 +211,7 @@ export default function LoginPage() {
                   </span>
                 </div> */}
                 <h3 className="text-xl font-bold mb-1">Sign In</h3>
-                <p className="text-[#B8C0D4] text-sm">Access your AI-powered trading dashboard</p>
+                <p className="text-[#B8C0D4] text-sm">Access your trading education and practice dashboard</p>
               </div>
 
               {/* Error Message */}
