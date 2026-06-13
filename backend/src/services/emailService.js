@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 // Create transporter
 const createTransporter = () => {
   console.log("Creating SMTP transporter...");
+
   return nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
@@ -11,6 +12,11 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    logger: true,
+    debug: true,
   });
 };
 
@@ -57,9 +63,10 @@ export const sendOtpEmail = async (to, otp) => {
     console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
     console.log("SENDER_EMAIL:", process.env.SENDER_EMAIL);
 
-    await transporter.verify();
-    console.log("SMTP Connected Successfully");
+    // await transporter.verify();
+    // console.log("SMTP Connected Successfully");
 
+    // const info = await transporter.sendMail(mailOptions);
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent:", info.messageId);
 
