@@ -57,7 +57,8 @@ export const updateProfile = async (req, res) => {
       });
     }
     if (phone && phone.length < 10) {
-      return res.status(400).json({
+      return r
+      es.status(400).json({
         success: false,
         message: 'Phone number must be at least 10 digits',
       });

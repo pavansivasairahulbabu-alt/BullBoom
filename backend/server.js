@@ -7,6 +7,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import mongoose from 'mongoose';
 import authRoutes from './src/routes/authRoutes.js';
@@ -242,13 +244,19 @@ const autoSeedLearningData = async () => {
 };
 
 
+// Directory setup for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 // Middleware
 app.use(helmet()); // Add security headers
 app.use(morgan('dev')); // Log HTTP requests
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? (process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : true)
+    : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
 }));
 app.use(express.json()); // Parse JSON request bodies
@@ -280,6 +288,17 @@ app.use('/api/positions', positionRoutes);
 
 // Education Routes
 app.use('/api/education', educationRoutes);
+
+// Serve static frontend files in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
+  app.use(express.static(frontendDistPath));
+
+  // Serve index.html for any non-API routes (SPA routing)
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(frontendDistPath, 'index.html'));
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
