@@ -5,14 +5,18 @@ const createTransporter = () => {
   console.log("Creating SMTP transporter...");
 
   return nodemailer.createTransport({
-    host: "smtp.brevo.com",
+    host: "smtp-relay.brevo.com",
     port: 587,
     secure: false,
-    requireTLS: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    logger: true,
+    debug: true,
   });
 };
 console.log("Trying SMTP connection...");
