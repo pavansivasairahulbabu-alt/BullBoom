@@ -1,9 +1,4 @@
 import dns from "dns";
-
-if (process.env.NODE_ENV !== "production") {
-  dns.setServers(["8.8.8.8", "8.8.4.4"]);
-}
-
 dns.setDefaultResultOrder("ipv4first");
 
 import mongoose from "mongoose";
