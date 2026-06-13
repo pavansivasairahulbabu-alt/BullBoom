@@ -1,4 +1,5 @@
 
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -19,10 +20,11 @@ import CourseCategory from './src/models/CourseCategory.model.js';
 import Topic from './src/models/Topic.model.js';
 import Quiz from './src/models/Quiz.model.js';
 import Achievement from './src/models/Achievement.model.js';
-import nodemailer from 'nodemailer';
+import { isBrevoConfigured } from './src/services/emailService.js';
+import emailRoutes from './src/routes/emailRoutes.js';
 
 const validateEnv = () => {
-  const requiredVars = ['MONGO_URI', 'JWT_SECRET', 'CLIENT_URL', 'EMAIL_USER', 'EMAIL_PASS', 'NODE_ENV'];
+  const requiredVars = ['MONGO_URI', 'JWT_SECRET', 'CLIENT_URL', 'NODE_ENV'];
   const missing = requiredVars.filter(key => !process.env[key]);
   
   if (missing.length > 0) {
@@ -31,27 +33,6 @@ const validateEnv = () => {
   }
   
   console.log('✅ All environment variables are set');
-};
-
-const verifySMTP = async () => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-    
-    await transporter.verify();
-    console.log('✅ SMTP Connected');
-    return transporter;
-  } catch (error) {
-    console.error('❌ SMTP Failed:', error.message);
-    return null;
-  }
 };
 
 const autoSeedLearningData = async () => {
@@ -128,10 +109,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get('/api/health', async (req, res) => {
+  const config = isBrevoConfigured();
   res.status(200).json({
     success: true,
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    email: process.env.EMAIL_USER ? 'configured' : 'not configured',
+    email: config.apiKeyConfigured && config.senderConfigured ? 'configured' : 'not configured',
     environment: process.env.NODE_ENV
   });
 });
@@ -142,6 +124,7 @@ app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/positions', positionRoutes);
 app.use('/api/education', educationRoutes);
+app.use('/api/email', emailRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -191,7 +174,6 @@ const startServer = async () => {
     validateEnv();
     await connectDB();
     await autoSeedLearningData();
-    const smtpStatus = await verifySMTP();
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🚀 Bull Boom Server Started');
@@ -199,7 +181,8 @@ const startServer = async () => {
     console.log('📡 Port:', process.env.PORT || 5000);
     console.log('🔗 Client URL:', process.env.CLIENT_URL);
     console.log('🗄️  MongoDB Connected');
-    console.log('📧 SMTP:', smtpStatus ? 'Connected' : 'Not Connected');
+    const config = isBrevoConfigured();
+    console.log('📧 Email:', config.apiKeyConfigured && config.senderConfigured ? 'Brevo API Configured' : 'Not Configured');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     const PORT = process.env.PORT || 5000;
