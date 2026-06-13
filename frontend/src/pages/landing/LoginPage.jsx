@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaChartLine, FaChevronRight, FaTelegram } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { authApi } from '../../services/api';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,19 +33,7 @@ export default function LoginPage() {
         requestBody.phone = identifier;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
+      const data = await authApi.login(requestBody);
 
       // Store token and user in localStorage
       localStorage.setItem('token', data.token);
@@ -53,7 +42,7 @@ export default function LoginPage() {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -175,7 +164,7 @@ export default function LoginPage() {
               <div className="mb-8">
                 <h2 className="text-3xl sm:text-4xl font-black mb-3">Welcome Back, Trader</h2>
                 <p className="text-[#B8C0D4] text-lg">
-                  Continue your trading journey with AI-powered market intelligence, smart analysis, and risk management tools.
+                  Continue your trading journey with comprehensive education, smart tracking, and risk management tools.
                 </p>
               </div>
 
@@ -183,7 +172,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-3 gap-4">
                 {[
                   { value: "10K+", label: "Active Traders" },
-                  { value: "95%", label: "AI Accuracy" },
+                  { value: "95%", label: "Learner Success" },
                   { value: "₹50Cr+", label: "Trades Analyzed" },
                 ].map((stat, i) => (
                   <motion.div
@@ -222,7 +211,7 @@ export default function LoginPage() {
                   </span>
                 </div> */}
                 <h3 className="text-xl font-bold mb-1">Sign In</h3>
-                <p className="text-[#B8C0D4] text-sm">Access your AI-powered trading dashboard</p>
+                <p className="text-[#B8C0D4] text-sm">Access your trading education and practice dashboard</p>
               </div>
 
               {/* Error Message */}

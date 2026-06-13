@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { educationApi } from '../../services/api';
-import { ArrowLeft, CheckCircle2, Video, BookOpen, Lightbulb, FileText, ArrowLeftCircle, ArrowRightCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, BookOpen, Lightbulb, FileText, ArrowLeftCircle, ArrowRightCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Topic() {
@@ -20,14 +20,14 @@ export default function Topic() {
     try {
       setLoading(true);
       const res = await educationApi.getTopic(id);
-      if (res.data.success) {
-        setData(res.data.data);
+      if (res.success) {
+        setData(res.data);
         // Fetch category topics to get prev/next
-        const categoryId = res.data.data.topic.category?._id || res.data.data.topic.category;
+        const categoryId = res.data.topic.category?._id || res.data.topic.category;
         if (categoryId) {
           const catRes = await educationApi.getCategory(categoryId);
-          if (catRes.data.success) {
-            setTopics(catRes.data.data.topics);
+          if (catRes.success) {
+            setTopics(catRes.data.topics);
           }
         }
       }
@@ -73,19 +73,6 @@ export default function Topic() {
       </button>
 
       <div className="bg-[#0B1220] rounded-2xl border border-white/5 overflow-hidden">
-        {data?.topic.videoUrl && (
-          <div className="aspect-video bg-black">
-            <iframe
-              src={data.topic.videoUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={data.topic.title}
-            />
-          </div>
-        )}
-
         <div className="p-8 space-y-8">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -182,7 +169,7 @@ export default function Topic() {
                 </button>
               )}
             </div>
-          </div>
+          </div>  
         </div>
       </div>
     </div>

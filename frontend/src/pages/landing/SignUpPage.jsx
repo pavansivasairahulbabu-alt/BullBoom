@@ -8,7 +8,6 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
-  FaGift,
   FaCheck,
   FaGoogle,
   FaTelegram,
@@ -17,6 +16,7 @@ import {
   FaRedo
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { authApi } from '../../services/api';
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
@@ -25,7 +25,6 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -77,26 +76,13 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send OTP');
-      }
-
+      const data = await authApi.sendOtp(email);
       // Move to OTP step
       setStep(2);
       setCountdown(59);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -107,25 +93,13 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend OTP');
-      }
+      await authApi.sendOtp(email);
 
       setCountdown(59);
       setOtp(['', '', '', '', '', '']);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
@@ -143,30 +117,14 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          otp: enteredOtp,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
-
+      await authApi.verifyOtp(email, enteredOtp);
       setOtpVerified(true);
       setTimeout(() => {
         setStep(3);
       }, 1000);
 
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'OTP verification failed');
     } finally {
       setLoading(false);
     }
@@ -177,25 +135,12 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          password,
-          referralCode,
-        }),
+      const data = await authApi.signup({
+        fullName,
+        email,
+        phone,
+        password,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
-      }
 
       // Store token and user in localStorage
       localStorage.setItem('token', data.token);
@@ -204,7 +149,7 @@ export default function SignUpPage() {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
@@ -301,7 +246,7 @@ export default function SignUpPage() {
                       <h2 className="text-xl font-bold bg-gradient-to-r from-[#32CD32] to-[#39FF14] bg-clip-text text-transparent">
                         Bull Boom
                       </h2>
-                      <p className="text-xs text-[#B8C0D4]">AI Trading Platform</p>
+                      <p className="text-xs text-[#B8C0D4]">Trading Education Platform</p>
                     </div>
                   </div>
 
@@ -327,7 +272,7 @@ export default function SignUpPage() {
               <div className="mb-8">
                 <h3 className="text-3xl sm:text-4xl font-black mb-3">Start Your Trading Journey</h3>
                 <p className="text-[#B8C0D4] text-lg">
-                  Join thousands of traders using AI-powered analysis, smart risk management, and advanced market insights to make better trading decisions.
+                  Join thousands of traders using smart risk management, advanced market insights, and comprehensive education to improve their trading skills.
                 </p>
               </div>
 
@@ -336,7 +281,7 @@ export default function SignUpPage() {
                 {[
                   { value: "25K+", label: "Registered Traders" },
                   { value: "1M+", label: "Trades Analyzed" },
-                  { value: "95%", label: "AI Accuracy" },
+                  { value: "95%", label: "Learner Success" },
                   { value: "₹100Cr+", label: "Trading Volume" },
                 ].map((stat, i) => (
                   <motion.div
@@ -359,7 +304,7 @@ export default function SignUpPage() {
               {/* Feature Highlights */}
               <div className="grid grid-cols-2 gap-3 mb-8">
                 {[
-                  "AI Trade Analysis",
+                  "Trade Tracking & Journaling",
                   "Smart Market Watchlists",
                   "Risk Management Tools",
                   "Trading Psychology Insights",
@@ -514,20 +459,6 @@ export default function SignUpPage() {
                       >
                         {showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Referral Code */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 px-4 py-4 rounded-xl bg-[#050816] border border-white/10 focus-within:border-[#32CD32]/50 focus-within:shadow-[0_0_20px_rgba(50,205,50,0.15)] transition-all">
-                      <FaGift className="text-[#32CD32] w-4 h-4" />
-                      <input
-                        type="text"
-                        placeholder="Enter referral code (optional)"
-                        value={referralCode}
-                        onChange={(e) => setReferralCode(e.target.value)}
-                        className="flex-1 bg-transparent text-white outline-none placeholder:text-[#B8C0D4]/50"
-                      />
                     </div>
                   </div>
 

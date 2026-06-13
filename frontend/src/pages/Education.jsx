@@ -77,8 +77,8 @@ export default function Education() {
   const fetchDashboardData = async () => {
     try {
       const res = await educationApi.getDashboard();
-      if (res.data.success) {
-        setDashboardData(res.data.data);
+      if (res.success) {
+        setDashboardData(res.data);
       }
     } catch (err) {
       console.error(err);

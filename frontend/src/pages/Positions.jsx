@@ -50,8 +50,8 @@ export default function Positions() {
     try {
       setLoading(true);
       const res = await positionApi.getPositions();
-      if (res.data.success) {
-        setPositions(res.data.positions);
+      if (res.success) {
+        setPositions(res.positions);
       }
     } catch (error) {
       console.error('Error fetching positions:', error);
@@ -151,7 +151,7 @@ export default function Positions() {
         positionId: selectedPosition._id,
         quantity: Number(sellForm.quantity)
       });
-      if (res.data.success) {
+      if (res.success) {
         toast.success('Position sold successfully');
         setIsSellModalOpen(false);
         setSelectedPosition(null);

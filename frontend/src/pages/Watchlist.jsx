@@ -10,7 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import api, { orderApi } from '../services/api';
+import { orderApi, watchlistApi } from '../services/api';
 
 // --- Common Indian Stocks & Indices ---
 const COMMON_SYMBOLS = [
@@ -256,7 +256,7 @@ const BuyModal = ({ isOpen, onClose, item, onSuccess }) => {
         exchange: item.exchange
       });
 
-      if (response.data.success) {
+      if (response.success) {
         toast.success(`Buy order executed successfully!`);
         onSuccess();
         onClose();
@@ -344,9 +344,9 @@ export default function Watchlist() {
   const fetchWatchlist = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/watchlist');
-      if (response.data.success) {
-        setWatchlist(response.data.watchlist);
+      const response = await watchlistApi.getWatchlist();
+      if (response.success) {
+        setWatchlist(response.watchlist);
       }
     } catch (error) {
       console.error('Error fetching watchlist:', error);
@@ -358,11 +358,11 @@ export default function Watchlist() {
 
   const handleAddToWatchlist = async (symbol, exchange) => {
     try {
-      const response = await api.post('/watchlist/add', {
+      const response = await watchlistApi.addToWatchlist({
         symbol: symbol.toUpperCase(),
         exchange: exchange.toUpperCase(),
       });
-      if (response.data.success) {
+      if (response.success) {
         toast.success(`${symbol} added to watchlist!`);
         fetchWatchlist();
         setIsAddModalOpen(false);
@@ -375,8 +375,8 @@ export default function Watchlist() {
 
   const handleDeleteFromWatchlist = async (item) => {
     try {
-      const response = await api.delete(`/watchlist/${item._id}`);
-      if (response.data.success) {
+      const response = await watchlistApi.removeFromWatchlist(item._id);
+      if (response.success) {
         toast.success(`${item.symbol} removed from watchlist!`);
         fetchWatchlist();
       }

@@ -11,6 +11,7 @@
     "seed": "node scripts/seedEducation.js",
     "seedEducation": "node scripts/seedEducationData.js",
     "seedLearning": "node scripts/seedLearningData.js",
+    "seed": "node scripts/seedLearningData.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -23,6 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@getbrevo/brevo": "^5.0.4",
+    "axios": "^1.17.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",

@@ -50,8 +50,8 @@ export default function Orders() {
     try {
       setLoading(true);
       const res = await orderApi.getOrders();
-      if (res.data.success) {
-        setOrders(res.data.orders);
+      if (res.success) {
+        setOrders(res.orders);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);

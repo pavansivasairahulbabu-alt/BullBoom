@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import connectDB from '../config/db.js';
 import CourseCategory from '../src/models/CourseCategory.model.js';
 import Topic from '../src/models/Topic.model.js';
 import Quiz from '../src/models/Quiz.model.js';
@@ -9,407 +10,567 @@ dotenv.config();
 
 const seedLearningData = async () => {
   try {
-    console.log('🌱 Starting seed process...');
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB');
+    await connectDB();
 
-    // Clear existing data
-    await CourseCategory.deleteMany({});
-    await Topic.deleteMany({});
-    await Quiz.deleteMany({});
-    await Achievement.deleteMany({});
-    console.log('🗑️ Cleared existing learning data');
-
-    // --- Create Categories ---
-    const categoriesData = [
+    // --- Define all categories with data ---
+    const allCategories = [
+      // Category 1: Option Basics - keep exactly as original user content
       {
-        name: 'Options Basics',
-        description: 'Learn the fundamentals of options trading, including calls, puts, strike prices, and premiums.',
+        name: 'Option Basics',
+        description: 'Learn the fundamentals of options trading from beginner level.',
         icon: '🎯',
         difficulty: 'Beginner',
-        estimatedHours: 8,
-        order: 1
+        estimatedHours: 5,
+        order: 1,
+        topics: [
+          {
+            title: 'What are Options?',
+            description: 'Learn the fundamentals of options contracts, rights, obligations, and contract structure.',
+            icon: '📚',
+            content: `<h3>American vs. European Options</h3>
+<ul>
+  <li>American options allow exercise at any point up to the expiration date.</li>
+  <li>European options can only be exercised at the exact moment of expiration.</li>
+  <li>Most individual stock options are American-style.</li>
+  <li>Most broad market index options (like SPX) are European-style.</li>
+</ul>
+
+<h3>Rights vs Obligations</h3>
+<ul>
+  <li>Option buyers pay a premium to obtain rights.</li>
+  <li>Option buyers have no obligations; they choose whether to trade.</li>
+  <li>Option sellers receive a premium and take on obligations.</li>
+  <li>Sellers must fulfill the contract if the buyer decides to exercise.</li>
+</ul>
+
+<h3>Contract Size</h3>
+<ul>
+  <li>One standard equity option contract represents exactly 100 shares of stock.</li>
+  <li>Premium prices are quoted per share, so multiply by 100 for the total cost.</li>
+  <li>An option quoted at $2.00 actually costs $200 to purchase.</li>
+  <li>All gains, losses, and risk calculations scale by this 100-share multiplier.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 1
+          },
+          {
+            title: 'Call Options',
+            description: 'Understand how traders use call options to profit from bullish market moves.',
+            icon: '📈',
+            content: `<h3>Buying Calls (Long Call)</h3>
+<ul>
+  <li>Traders buy calls when they have a bullish market outlook.</li>
+  <li>It profits when the underlying stock price moves sharply upward.</li>
+  <li>It offers a cheaper way to control shares without buying stock directly.</li>
+  <li>It provides high leverage, magnifying percentage gains relative to the capital risked.</li>
+</ul>
+
+<h3>Breakeven Price</h3>
+<ul>
+  <li>Calculated as the Strike Price plus the Premium paid.</li>
+  <li>If you buy a $50 strike call for $3, breakeven is $53.</li>
+  <li>The stock must rise past this point at expiry to net a profit.</li>
+  <li>Selling the option before expiry can yield profits below this line.</li>
+</ul>
+
+<h3>Maximum Risk</h3>
+<ul>
+  <li>The risk is strictly capped at the total premium paid plus commissions.</li>
+  <li>You cannot lose more money than your initial trade entry cost.</li>
+  <li>Maximum loss occurs if the stock finishes below the strike price at expiry.</li>
+  <li>The option simply expires completely worthless, resulting in a 100% loss.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '12 min',
+            order: 2
+          },
+          {
+            title: 'Put Options',
+            description: 'Learn how put options help traders profit from falling markets and protect investments.',
+            icon: '📉',
+            content: `<h3>Puts vs. Short-Selling</h3>
+<ul>
+  <li>Buying puts has strictly capped risk (the premium paid).</li>
+  <li>Shorting stock carries theoretically unlimited risk if the price spikes.</li>
+  <li>Puts do not require borrowing shares from a broker.</li>
+  <li>Puts do not incur daily stock borrowing fees or dividend obligations.</li>
+</ul>
+
+<h3>Flat Stock Movement Effect</h3>
+<ul>
+  <li>A stagnant stock price causes the put to lose value daily.</li>
+  <li>This loss is caused by time decay (Theta) eating extrinsic value.</li>
+  <li>Implied volatility drops can accelerate this value loss.</li>
+  <li>Holding a flat option until expiry results in total loss of premium.</li>
+</ul>
+
+<h3>Married Puts (Insurance)</h3>
+<ul>
+  <li>A strategy combining buying 100 shares of stock and 1 put option.</li>
+  <li>The put acts as an insurance policy against a severe market crash.</li>
+  <li>It establishes a concrete price floor where you can sell your shares.</li>
+  <li>It allows you to participate in upside gains while limiting maximum downside.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '12 min',
+            order: 3
+          },
+          {
+            title: 'Strike Price',
+            description: 'Understand ITM, ATM and OTM options and how strike selection impacts risk and reward.',
+            icon: '🎯',
+            content: `<h3>ITM, ATM, and OTM Definitions</h3>
+<ul>
+  <li>In-the-Money (ITM): Calls have strikes below stock price; Puts have strikes above.</li>
+  <li>At-the-Money (ATM): The strike price is identical to the current stock price.</li>
+  <li>Out-of-the-Money (OTM): Calls have strikes above stock price; Puts have strikes below.</li>
+  <li>ITM options hold intrinsic value, while OTM options consist purely of time value.</li>
+</ul>
+
+<h3>Strike Selection and Probability</h3>
+<ul>
+  <li>OTM strikes are cheap but have a lower probability of finishing profitable.</li>
+  <li>ITM strikes are expensive but have a higher mathematical probability of success.</li>
+  <li>Choosing further OTM increases leverage but decreases your win rate.</li>
+  <li>Choosing deep ITM mimics owning the actual stock with less premium erosion.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '8 min',
+            order: 4
+          },
+          {
+            title: 'Premium',
+            description: 'Learn how option pricing works and what factors affect premiums.',
+            icon: '💵',
+            content: `<h3>Intrinsic vs. Extrinsic Value</h3>
+<ul>
+  <li>Intrinsic value is the real, tangible value if exercised right now.</li>
+  <li>Only In-the-Money (ITM) options possess intrinsic value.</li>
+  <li>Extrinsic value represents time value and market volatility expectations.</li>
+  <li>At expiration, all extrinsic value drops to zero.</li>
+</ul>
+
+<h3>Implied Volatility (IV) Impact</h3>
+<ul>
+  <li>IV measures the market's expectation of future price swings.</li>
+  <li>Higher IV expands premiums, making options more expensive to buy.</li>
+  <li>Lower IV deflates premiums, making options cheaper to buy.</li>
+  <li>Buying options right before major events (like earnings) risks an IV crush.</li>
+</ul>
+
+<h3>Time Decay</h3>
+<ul>
+  <li>Theta represents the daily loss of an option's extrinsic value.</li>
+  <li>Time decay is non-linear and accelerates as expiration approaches.</li>
+  <li>The erosion becomes steepest during the final 30 to 45 days.</li>
+  <li>Theta hurts option buyers but directly benefits option sellers.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '9 min',
+            order: 5
+          },
+          {
+            title: 'Expiry',
+            description: 'Understand option expiration and its impact on trading outcomes.',
+            icon: '📅',
+            content: `<h3>Holding ITM Through Expiry</h3>
+<ul>
+  <li>Brokers automatically exercise options that are ITM by $0.01 or more.</li>
+  <li>Long calls will be converted into buying 100 shares of stock.</li>
+  <li>Long puts will be converted into shorting 100 shares of stock.</li>
+  <li>If your account lacks the cash or margin, the broker may force-close it early.</li>
+</ul>
+
+<h3>Expiration Cycles</h3>
+<ul>
+  <li>Weeklies expire every Friday, offering short-term, high-risk trading targets.</li>
+  <li>Monthlies expire on the third Friday of the month and have the highest liquidity.</li>
+  <li>LEAPS are long-term options with expiration dates spanning up to 1–3 years.</li>
+  <li>Shorter cycles experience rapid time decay; longer cycles decay much slower.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '7 min',
+            order: 6
+          },
+          {
+            title: 'Margin',
+            description: 'Learn how margin requirements work for option buyers and sellers.',
+            icon: '🔒',
+            content: `<h3>Sellers vs. Buyers Margin</h3>
+<ul>
+  <li>Buyers have defined risk, so they only pay the initial premium cost.</li>
+  <li>Sellers face undefined, potentially unlimited risk if the trade goes wrong.</li>
+  <li>Brokers mandate a collateral deposit (margin) to cover potential selling losses.</li>
+  <li>This margin fluctuates dynamically as the underlying stock price moves.</li>
+</ul>
+
+<h3>Margin Calls and Liquidation</h3>
+<ul>
+  <li>A margin call happens when account equity falls below maintenance requirements.</li>
+  <li>Brokers demand you deposit cash immediately or close losing trades.</li>
+  <li>If ignored, the broker will force-liquidate positions without your consent.</li>
+  <li>Liquidation often occurs at worst-case market prices, locking in steep losses.</li>
+</ul>`,
+            videoUrl: '',
+            estimatedTime: '11 min',
+            order: 7
+          }
+        ]
       },
+      // Category 2: Charts & Candles
       {
         name: 'Charts & Candles',
         description: 'Master technical analysis with candlestick patterns, chart types, and price action strategies.',
         icon: '📊',
         difficulty: 'Beginner',
         estimatedHours: 6,
-        order: 2
+        order: 2,
+        topics: [
+          {
+            title: 'Candlestick Basics',
+            description: 'Learn to read and interpret candlestick charts.',
+            icon: '🕯️',
+            content: '<ul><li>Every single candlestick maps out four critical price points: the open, high, low, and close.</li><li>The solid colored section is called the real body, which shows the distance between the open and close.</li><li>The thin lines sticking out of the top and bottom are called wicks, representing price extremes.</li><li>A green candle means the price closed higher than it opened, signaling a bullish session.</li><li>A red candle means the price closed lower than it opened, signaling a bearish session.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 1
+          },
+          {
+            title: 'Doji',
+            description: 'The powerful reversal pattern.',
+            icon: '⚠️',
+            content: '<ul><li>A Doji forms when a financial asset opens and closes at virtually the identical price level.</li><li>It looks like a cross or a plus sign because the real body is exceptionally thin.</li><li>This specific structure tells you that buyers and sellers are trapped in total indecision.</li><li>While it shows a pause, a Doji at the end of an extended trend warns of a potential reversal.</li><li>Traders never buy a Doji immediately; they always wait for the next candle to confirm direction.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 2
+          },
+          {
+            title: 'Hammer',
+            description: 'The bullish reversal pattern.',
+            icon: '🔨',
+            content: '<ul><li>A Hammer is a single-candle bullish reversal pattern that only forms at the bottom of a downtrend.</li><li>It features a small real body at the top and a very long lower wick extending downward.</li><li>The lower wick must be at least two to three times larger than the size of the body.</li><li>It proves that sellers aggressively pushed the price down, but buyers fought back to force a recovery.</li><li>While the candle body can be red or green, a green Hammer provides a stronger buy signal.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 3
+          },
+          {
+            title: 'Shooting Star',
+            description: 'The bearish reversal pattern.',
+            icon: '⭐',
+            content: '<ul><li>A Shooting Star is a bearish reversal candle that appears strictly at the peak of an uptrend.</li><li>It has a small real body at the bottom and a very long upper wick pointing upward.</li><li>The long upper wick proves that buyers pushed prices high but failed miserably to sustain them.</li><li>Sellers took complete control of the session by the closing bell, driving the price back down.</li><li>It warns traders that the upward momentum is exhausted and a downward turn is likely coming.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 4
+          },
+          {
+            title: 'Engulfing Pattern',
+            description: 'The two-candle reversal pattern.',
+            icon: '🔄',
+            content: '<ul><li>This is a highly reliable two-candle trend reversal pattern that shows an aggressive shift in power.</li><li>A Bullish Engulfing pattern starts with a small red candle followed by a massive green candle.</li><li>The body of the second candle must completely overlap or "swallow" the body of the first.</li><li>A Bearish Engulfing pattern flips this, showing a small green candle swallowed by a huge red candle.</li><li>It indicates that the previous trend has completely lost its momentum to the opposing side.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 5
+          },
+          {
+            title: 'Morning Star',
+            description: 'The three-candle bullish pattern.',
+            icon: '🌟',
+            content: '<ul><li>The Morning Star is a powerful three-candle bullish reversal pattern found inside downtrends.</li><li>The first candle is long and bearish, showing that sellers are firmly in control of the market.</li><li>The second candle has a very tiny body, signaling that the downward momentum is stalling out.</li><li>The third candle is long and bullish, closing deeply into the territory of the very first candle.</li><li>This visual sequence confirms that the bears have lost control and an uptrend is beginning.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 6
+          }
+        ]
       },
+      // Category 3: Option Greeks
       {
         name: 'Option Greeks',
-        description: 'Understand Delta, Gamma, Theta, Vega, and Rho—the Greeks that drive option pricing.',
+        description: 'Understand Delta, Gamma, Theta, Vega, and Rho — the Greeks that drive option pricing.',
         icon: '📈',
         difficulty: 'Intermediate',
         estimatedHours: 10,
-        order: 3
+        order: 3,
+        topics: [
+          {
+            title: 'Delta',
+            description: 'Directional Risk - Price Sensitivity',
+            icon: '📐',
+            content: '<ul><li><strong>Measures Price Sensitivity:</strong> Delta indicates how much an option\'s price is expected to move for every $1 change in the underlying asset\'s price.</li><li><strong>Value Ranges:</strong> Call options have a positive Delta ranging from 0 to 1, while Put options have a negative Delta ranging from -1 to 0.</li><li><strong>Probability Proxy:</strong> Traders often use Delta as a rough mathematical estimate of the percentage chance that an option will expire in-the-money (ITM). For example, a 0.30 Delta implies roughly a 30% chance.</li><li><strong>Share Equivalence:</strong> A Delta of 0.50 means the option behaves similarly to owning 50 shares of the underlying stock.</li><li><strong>Dynamic Nature:</strong> Delta is not static; it constantly shifts as the underlying stock price moves and as expiration approaches.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 1
+          },
+          {
+            title: 'Gamma',
+            description: 'Rate of Change - Delta\'s Acceleration',
+            icon: '📐',
+            content: '<ul><li><strong>Measures Delta\'s Sensitivity:</strong> Gamma represents the rate of change in an option\'s Delta for every $1 move in the underlying stock. If Delta is the "speed" of the option, Gamma is the "acceleration."</li><li><strong>Highest at the Money:</strong> Gamma is typically at its peak for at-the-money (ATM) options and decreases as the option moves deep into or out of the money.</li><li><strong>Positive Value:</strong> It is always a positive number for buyers of both long calls and long puts.</li><li><strong>Risk Indicator:</strong> A high Gamma means the option\'s Delta can change rapidly with small stock movements, resulting in higher price volatility and potential risk/reward.</li><li><strong>Expiration Impact:</strong> Gamma tends to increase significantly as expiration draws closer, making near-term ATM options highly sensitive to underlying price swings.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 2
+          },
+          {
+            title: 'Theta',
+            description: 'Time Decay - The Silent Killer',
+            icon: '⏳',
+            content: '<ul><li><strong>Measures Time Sensitivity:</strong> Theta quantifies the rate of time decay on an option\'s premium, representing how much value the option loses each day as it nears expiration.</li><li><strong>The Silent Killer for Buyers:</strong> Theta is generally negative for option buyers (meaning time works against them) and positive for option sellers (meaning time works in their favor).</li><li><strong>Accelerates Over Time:</strong> Time decay is not linear; it accelerates rapidly in the final weeks and days leading up to expiration, especially for at-the-money options.</li><li><strong>Targets Extrinsic Value:</strong> Theta only eats away at an option\'s extrinsic (time) value. It does not affect the intrinsic value of an option that is already in-the-money.</li><li><strong>Weekend Effect:</strong> While the market is closed, time decay still mathematically occurs, though market makers often price in weekend Theta decay by late Friday.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 3
+          },
+          {
+            title: 'Vega',
+            description: 'Volatility Risk',
+            icon: '🌊',
+            content: '<ul><li><strong>Measures Volatility Sensitivity:</strong> Vega indicates how much an option\'s price will change for a 1% shift in the underlying asset\'s implied volatility (IV).</li><li><strong>Positive for Buyers:</strong> When implied volatility increases, option premiums generally become more expensive, making Vega a positive force for option buyers and a risk for sellers.</li><li><strong>Impacts Longer-Term Options:</strong> Vega has the greatest impact on options with longer expiration dates, as there is more time for volatility to drastically affect the underlying asset.</li><li><strong>Highest at the Money:</strong> Like Gamma, Vega is most concentrated in at-the-money options and drops off for deep out-of-the-money or in-the-money contracts.</li><li><strong>The "IV Crush":</strong> A sudden drop in implied volatility (which frequently happens right after an anticipated event like an earnings report) can severely reduce an option\'s price, even if the stock moves in the desired direction.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 4
+          },
+          {
+            title: 'Rho',
+            description: 'Interest Rate Risk',
+            icon: '🏦',
+            content: '<ul><li><strong>Measures Interest Rate Sensitivity:</strong> Rho represents the expected change in an option\'s price for a 1% change in the risk-free interest rate (often tied to U.S. Treasury bills).</li><li><strong>Divergence Between Calls and Puts:</strong> Call options generally have a positive Rho (values increase as interest rates rise), while put options have a negative Rho (values decrease as rates rise).</li><li><strong>Minimal Short Term Impacts:</strong> For standard, short-term options trades, Rho is usually the least significant of the Greeks and has a negligible effect on daily pricing.</li><li><strong>Relevance for LEAPS:</strong> Rho becomes a much more critical factor for longer-term options, such as Long-Term Equity Anticipation Securities (LEAPS), where the cost of carrying the position over months or years is higher.</li><li><strong>Macroeconomic Factor:</strong> Because interest rates change infrequently compared to stock prices or market volatility, Rho is typically only monitored closely during periods of aggressive central bank policy shifts.</li></ul>',
+            keyTakeaways: [],
+            examples: [],
+            videoUrl: '',
+            estimatedTime: '10 min',
+            order: 5
+          }
+        ]
       },
+      // Category 4: Open Interest
       {
         name: 'Open Interest',
         description: 'Learn how to analyze open interest and volume to predict market movements.',
         icon: '📉',
         difficulty: 'Intermediate',
         estimatedHours: 5,
-        order: 4
+        order: 4,
+        topics: [
+          { title: 'OI Basics', description: 'Introduction to Open Interest.', icon: '📊', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Long Build Up', description: 'Identify bullish positions.', icon: '📈', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Short Build Up', description: 'Identify bearish positions.', icon: '📉', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Long Unwinding', description: 'Longs taking profits.', icon: '📉', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Short Covering', description: 'Shorts getting squeezed.', icon: '📈', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       },
+      // Category 5: Trading Strategies
       {
         name: 'Trading Strategies',
         description: 'Discover advanced options strategies like straddles, strangles, and iron condors.',
         icon: '⚡',
         difficulty: 'Advanced',
         estimatedHours: 12,
-        order: 5
+        order: 5,
+        topics: [
+          { title: 'Straddle', description: 'Play volatility with straddles.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Strangle', description: 'Lower cost volatility strategy.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Iron Condor', description: 'Market neutral strategy.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Bull Call Spread', description: 'Limited risk bullish spread.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Bear Put Spread', description: 'Limited risk bearish spread.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 },
+          { title: 'Covered Call', description: 'Income from your long position.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 6 }
+        ]
       },
+      // Category 6: Risk Management
       {
         name: 'Risk Management',
         description: 'Protect your capital with position sizing, stop losses, and risk-reward analysis.',
         icon: '🛡️',
         difficulty: 'Beginner',
         estimatedHours: 7,
-        order: 6
+        order: 6,
+        topics: [
+          { title: 'Position Sizing', description: 'How much to risk per trade.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Stop Loss', description: 'Your insurance against big losses.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Risk Reward Ratio', description: 'Ensure your risk justifies reward.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Capital Protection', description: 'Preserve your capital at all costs.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Hedging', description: 'Protect your portfolio.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       },
+      // Category 7: Trading Psychology
       {
         name: 'Trading Psychology',
         description: 'Master your emotions, develop discipline, and build a winning trading mindset.',
         icon: '🧠',
         difficulty: 'Intermediate',
         estimatedHours: 6,
-        order: 7
+        order: 7,
+        topics: [
+          { title: 'Discipline', description: 'The most important skill.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Emotional Control', description: 'Don\'t let emotions decide.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Fear and Greed', description: 'Recognize these emotions.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Revenge Trading', description: 'The most expensive mistake.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Trading Journal', description: 'Track, review, improve.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       },
+      // Category 8: Swing Trading
       {
         name: 'Swing Trading',
         description: 'Learn swing trading techniques to profit from medium-term market trends.',
         icon: '📅',
         difficulty: 'Intermediate',
         estimatedHours: 8,
-        order: 8
+        order: 8,
+        topics: [
+          { title: 'Trend Analysis', description: 'Identify the trend first.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Swing Entry', description: 'Enter at the right time.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Swing Exit', description: 'Take profits at the right time.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Breakout Trading', description: 'Trade when levels break.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Pullback Trading', description: 'Buy the dip in trend.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       },
+      // Category 9: Intraday Trading
       {
         name: 'Intraday Trading',
         description: 'Master day trading strategies including scalping, momentum, and VWAP-based trades.',
         icon: '🕒',
         difficulty: 'Advanced',
         estimatedHours: 10,
-        order: 9
+        order: 9,
+        topics: [
+          { title: 'Scalping', description: 'Quick in and out trades.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Momentum Trading', description: 'Go with the flow.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'VWAP', description: 'Volume Weighted Average Price.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'ORB Strategy', description: 'Opening Range Breakout.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Volume Analysis', description: 'Read what volume tells you.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       },
+      // Category 10: Futures & Options
       {
         name: 'Futures & Options',
         description: 'Complete guide to futures and options trading from basics to advanced strategies.',
         icon: '💰',
         difficulty: 'Advanced',
         estimatedHours: 15,
-        order: 10
+        order: 10,
+        topics: [
+          { title: 'Futures Basics', description: 'Introduction to futures.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 1 },
+          { title: 'Lot Size', description: 'Understand contract sizes.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 2 },
+          { title: 'Margin Requirements', description: 'Margin for futures trading.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 3 },
+          { title: 'Futures Hedging', description: 'Hedge with futures.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 4 },
+          { title: 'Futures Strategies', description: 'Futures trading strategies.', icon: '📖', content: '<p>Content will be added later.</p>', keyTakeaways: [], examples: [], videoUrl: '', estimatedTime: '10 min', order: 5 }
+        ]
       }
     ];
 
-    const createdCategories = await CourseCategory.insertMany(categoriesData);
-    console.log(`✅ Created ${createdCategories.length} categories`);
+    // --- Process each category ---
+    for (const categoryData of allCategories) {
+      // Extract topics from category data
+      const { topics, ...categoryFields } = categoryData;
 
-    // --- Create Topics ---
-    const topicsData = [];
+      // Find or create category
+      let category = await CourseCategory.findOne({ name: categoryData.name });
+      if (category) {
+        // Update existing category
+        await CourseCategory.updateOne({ _id: category._id }, { $set: categoryFields });
+      } else {
+        // Create new category
+        category = await CourseCategory.create(categoryFields);
+      }
 
-    // Options Basics topics
-    topicsData.push(
-      { category: createdCategories[0]._id, title: 'What are Options?', description: 'An introduction to options contracts and how they work.', icon: '📚', content: `<p>Options are financial derivatives that give buyers the right, but not the obligation, to buy or sell an underlying asset at a specified price on or before a specified date.</p><h3>Key Concepts:</h3><ul><li><strong>Right, not Obligation:</strong> Buyers can choose to exercise or let the option expire</li><li><strong>Underlying Asset:</strong> Stocks, indices, commodities, etc.</li><li><strong>Strike Price:</strong> The agreed price for buying/selling</li><li><strong>Expiry Date:</strong> The last day the option is valid</li></ul>`, keyTakeaways: ['Options give rights, not obligations', 'Calls = right to buy, Puts = right to sell', 'Every option has a limited lifespan'], examples: [{ title: 'Everyday Analogy', description: 'Think of an option like a rain check at a store: you pay a small fee to lock in a price, but you can choose not to use it.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '10 min', order: 1 },
-      { category: createdCategories[0]._id, title: 'Call Option', description: 'Everything you need to know about call options.', icon: '📈', content: `<p>A call option is a contract that gives the buyer the right to buy an underlying asset at a predetermined strike price before expiration.</p><h3>How Call Options Work:</h3><ul><li>Buyer pays a premium upfront</li><li>Profits when the underlying price rises above strike + premium</li><li>Maximum loss is the premium paid</li><li>Seller has potentially unlimited loss</li></ul>`, keyTakeaways: ['Calls profit from upward price movements', 'Buyer risk limited to premium', 'Seller has theoretically unlimited risk'], examples: [{ title: 'Reliance Call Example', description: 'Buy Reliance 2500 Call at ₹50. Profit starts when Reliance crosses ₹2550.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '12 min', order: 2 },
-      { category: createdCategories[0]._id, title: 'Put Option', description: 'Complete guide to put options.', icon: '📉', content: `<p>A put option is a contract that gives the buyer the right to sell an underlying asset at a predetermined strike price before expiration.</p><h3>How Put Options Work:</h3><ul><li>Buyer pays a premium upfront</li><li>Profits when underlying price falls below strike - premium</li><li>Maximum loss is the premium paid</li><li>Often used for hedging existing positions</li></ul>`, keyTakeaways: ['Puts profit from downward price movements', 'Great for hedging long positions', 'Buyer risk limited to premium'], examples: [{ title: 'Hedging with Puts', description: 'If you own 100 shares of a stock, buy a put to protect against a price drop.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '12 min', order: 3 },
-      { category: createdCategories[0]._id, title: 'Strike Price', description: 'Learn how to choose the right strike price.', icon: '🎯', content: `<p>The strike price is the fixed price at which the option holder can buy (call) or sell (put) the underlying asset.</p><h3>Types of Strikes:</h3><ul><li><strong>ITM (In the Money):</strong> Call - Strike < Price, Put - Strike > Price</li><li><strong>ATM (At the Money):</strong> Strike ≈ Price</li><li><strong>OTM (Out of the Money):</strong> Call - Strike > Price, Put - Strike < Price</li></ul>`, keyTakeaways: ['ITM options have intrinsic value', 'ATM options have highest time value', 'OTM options are cheaper but riskier'], examples: [{ title: 'Strike Selection', description: 'Aggressive traders buy OTM strikes, conservative traders buy ITM strikes.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '8 min', order: 4 },
-      { category: createdCategories[0]._id, title: 'Premium', description: 'Understand option premium components.', icon: '💵', content: `<p>Option premium is the price you pay for an option. It has two main components: intrinsic value and time value.</p><h3>Premium Components:</h3><ul><li><strong>Intrinsic Value:</strong> Real, tangible value if option is ITM</li><li><strong>Time Value:</strong> Value of time remaining until expiry</li><li><strong>Volatility:</strong> Implied volatility impacts time value</li></ul>`, keyTakeaways: ['Premium = Intrinsic + Time', 'Time value decays exponentially near expiry', 'Higher volatility = higher premium'], examples: [{ title: 'Premium Breakdown', description: 'A 2500 Call at ₹80 with spot at 2550: ₹50 intrinsic, ₹30 time value.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '9 min', order: 5 },
-      { category: createdCategories[0]._id, title: 'Expiry', description: 'Learn about option expiry dates.', icon: '📅', content: `<p>Option expiry is the last day an option can be traded or exercised. After expiry, OTM options become worthless.</p><h3>Expiry Cycles:</h3><ul><li><strong>Weekly:</strong> Expire on Thursdays (Nifty/BankNifty)</li><li><strong>Monthly:</strong> Expire on last Thursday of the month</li><li><strong>Quarterly:</strong> Expire on last Thursday of quarter</li></ul>`, keyTakeaways: ['Time value decays faster near expiry', 'Expiry day has high volatility', 'Roll over to next month if needed'], examples: [{ title: 'Rolling Over', description: 'If an option is near expiry and you want to keep your position, sell current and buy next month option.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '7 min', order: 6 },
-      { category: createdCategories[0]._id, title: 'Margin', description: 'Margin requirements for option sellers.', icon: '🔒', content: `<p>Option buyers pay full premium upfront. Option sellers need to deposit margin as collateral to cover potential losses.</p><h3>Margin Types:</h3><ul><li><strong>SPAN Margin:</strong> Standard Portfolio Analysis of Risk</li><li><strong>Exposure Margin:</strong> Additional margin over SPAN</li><li><strong>Margin Changes:</strong> Increases with volatility and near expiry</li></ul>`, keyTakeaways: ['Buyers: No margin needed', 'Sellers: Must deposit margin', 'Margin can change daily'], examples: [{ title: 'Margin Calculation', description: 'Selling an Nifty ATM call may require around ₹1,50,000 - ₹2,00,000 margin.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '11 min', order: 7 }
-    );
+      // Process topics for this category
+      for (const topicData of topics) {
+        // Add category reference to topic data
+        const topicWithCategory = { ...topicData, category: category._id };
 
-    // Charts & Candles topics
-    topicsData.push(
-      { category: createdCategories[1]._id, title: 'Candlestick Basics', description: 'Learn to read and interpret candlestick charts.', icon: '🕯️', content: `<p>Candlesticks are the most popular way to visualize price action. Each candle shows open, high, low, and close prices for a period.</p><h3>Candle Anatomy:</h3><ul><li><strong>Body:</strong> Range between open and close</li><li><strong>Upper Wick:</strong> High of the period</li><li><strong>Lower Wick:</strong> Low of the period</li><li><strong>Green/White:</strong> Close > Open (bullish)</li><li><strong>Red/Black:</strong> Close < Open (bearish)</li></ul>`, keyTakeaways: ['Long wicks show rejection of price levels', 'Long bodies show strong momentum', 'Candles should be analyzed in context'], examples: [{ title: 'Reading a Candle', description: 'A long green candle with small wicks shows strong buying pressure throughout the period.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '12 min', order: 1 },
-      { category: createdCategories[1]._id, title: 'Doji', description: 'The powerful reversal pattern.', icon: '⚠️', content: `<p>A Doji has open and close prices at the same level, showing indecision between buyers and sellers.</p><h3>What Doji Means:</h3><ul><li>Complete indecision in the market</li><li>Often signals a potential reversal</li><li>Needs confirmation from next candle</li><li>Variations: Gravestone, Dragonfly, Long-legged</li></ul>`, keyTakeaways: ['Doji = indecision', 'Appears at tops, bottoms, and decision points', 'Confirmation required'], examples: [{ title: 'Evening Star with Doji', description: 'A Doji at the top of an uptrend can signal exhaustion.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '8 min', order: 2 },
-      { category: createdCategories[1]._id, title: 'Hammer', description: 'The bullish reversal pattern.', icon: '🔨', content: `<p>A Hammer appears at bottoms and has a small body at the top with a long lower wick.</p><h3>Hammer Conditions:</h3><ul><li>Appears after a downtrend</li><li>Small body at upper end of range</li><li>Lower wick at least 2x body length</li><li>Upper wick very small or nonexistent</li></ul>`, keyTakeaways: ['Hammer = bullish reversal', 'Long lower wick shows buying pressure', 'Confirmation candle needed'], examples: [{ title: 'Market Bottom', description: 'After a sharp drop, a Hammer shows buyers are stepping in.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '9 min', order: 3 },
-      { category: createdCategories[1]._id, title: 'Shooting Star', description: 'The bearish reversal pattern.', icon: '⭐', content: `<p>A Shooting Star appears at tops and has a small body at the bottom with a long upper wick.</p><h3>Shooting Star Conditions:</h3><ul><li>Appears after an uptrend</li><li>Small body at lower end of range</li><li>Upper wick at least 2x body length</li><li>Lower wick very small or nonexistent</li></ul>`, keyTakeaways: ['Shooting Star = bearish reversal', 'Long upper wick shows selling pressure', 'Confirmation candle needed'], examples: [{ title: 'Market Top', description: 'After a strong rally, a Shooting Star shows sellers are taking over.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '9 min', order: 4 },
-      { category: createdCategories[1]._id, title: 'Engulfing Pattern', description: 'The two-candle reversal pattern.', icon: '🔄', content: `<p>An Engulfing pattern is two candles where the second candle completely covers the body of the first.</p><h3>Types:</h3><ul><li><strong>Bullish Engulfing:</strong> After downtrend, big green candle covers red candle</li><li><strong>Bearish Engulfing:</strong> After uptrend, big red candle covers green candle</li></ul>`, keyTakeaways: ['Engulfing = strong reversal signal', 'Bigger engulf = stronger signal', 'Look at volume too'], examples: [{ title: 'Strong Reversal', description: 'A Bearish Engulfing with high volume is a powerful signal to sell.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '10 min', order: 5 },
-      { category: createdCategories[1]._id, title: 'Morning Star', description: 'The three-candle bullish pattern.', icon: '🌟', content: `<p>The Morning Star is a three-candle bullish reversal pattern that signals the end of a downtrend.</p><h3>Morning Star Components:</h3><ol><li>Long red candle (downward momentum)</li><li>Small body candle (indecision)</li><li>Long green candle (bullish momentum)</li></ol>`, keyTakeaways: ['Very reliable bullish signal', 'Three candles complete the pattern', 'Volume on third candle confirms'], examples: [{ title: 'Reversal Signal', description: 'The Morning Star appeared at the March 2020 lows for many stocks.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '11 min', order: 6 }
-    );
+        // Find or create topic
+        let topic = await Topic.findOne({ category: category._id, title: topicData.title });
+        if (topic) {
+          // Update existing topic (preserve _id), and unset keyTakeaways/examples if not provided
+          const updateObj = { $set: topicWithCategory };
+          // If the topicData doesn't have keyTakeaways, unset it
+          if (!('keyTakeaways' in topicData)) {
+            updateObj.$unset = updateObj.$unset || {};
+            updateObj.$unset.keyTakeaways = "";
+          }
+          // If the topicData doesn't have examples, unset it
+          if (!('examples' in topicData)) {
+            updateObj.$unset = updateObj.$unset || {};
+            updateObj.$unset.examples = "";
+          }
+          await Topic.updateOne({ _id: topic._id }, updateObj);
+        } else {
+          // Create new topic
+          await Topic.create(topicWithCategory);
+        }
+      }
+    }
 
-    // Option Greeks topics
-    topicsData.push(
-      { category: createdCategories[2]._id, title: 'Delta', description: 'Learn how Delta affects your options.', icon: '📐', content: `<p>Delta measures how much an option's price changes for a ₹1 change in the underlying asset.</p><h3>Delta Values:</h3><ul><li>Call: 0 to +1 (0.5 ATM)</li><li>Put: -1 to 0 (-0.5 ATM)</li><li>Deep ITM: near ±1</li><li>Deep OTM: near 0</li></ul>`, keyTakeaways: ['Delta ≈ probability of expiring ITM', 'ITM options have higher delta', 'Delta changes as price changes'], examples: [{ title: 'Delta Example', description: 'Call with 0.5 delta: If underlying rises by ₹1, option premium rises by ~₹0.5.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '15 min', order: 1 },
-      { category: createdCategories[2]._id, title: 'Gamma', description: 'Understand Gamma, the rate of change of Delta.', icon: '📐', content: `<p>Gamma measures how much Delta changes for a ₹1 change in the underlying asset. It represents acceleration.</p><h3>Gamma Characteristics:</h3><ul><li>Highest at ATM options</li><li>Increases as expiration approaches</li><li>Positive for long options, negative for short</li></ul>`, keyTakeaways: ['Gamma = sensitivity of delta', 'Gamma increases near expiry', 'Gamma squeezes are real!'], examples: [{ title: 'Gamma in Action', description: 'A big move near expiry can create rapid delta changes (gamma squeeze).' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '14 min', order: 2 },
-      { category: createdCategories[2]._id, title: 'Theta', description: 'Time decay - the silent killer.', icon: '⏳', content: `<p>Theta measures how much an option's price decays each day due to time passing.</p><h3>Theta Decay:</h3><ul><li>Negative for long options (losing value daily)</li><li>Positive for short options (gaining value daily)</li><li>Decay accelerates near expiry</li></ul>`, keyTakeaways: ['Time decay is exponential near expiry', 'ATM options lose value fastest', 'Theta is why options are "wasting assets"'], examples: [{ title: 'Theta Impact', description: 'An ATM option with 30 days left might lose ₹5/day, but with 3 days left it could lose ₹50/day!' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '13 min', order: 3 },
-      { category: createdCategories[2]._id, title: 'Vega', description: 'Volatility sensitivity.', icon: '🌊', content: `<p>Vega measures how much an option's price changes for a 1% change in implied volatility.</p><h3>Vega Characteristics:</h3><ul><li>Highest for ATM options</li><li>Higher for longer-dated options</li><li>Positive for long options</li></ul>`, keyTakeaways: ['Vega = volatility sensitivity', 'Long options love volatility', 'Vega decreases closer to expiry'], examples: [{ title: 'Vega Example', description: 'A vega of 15 means 1% IV increase adds ₹15 to premium.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '12 min', order: 4 },
-      { category: createdCategories[2]._id, title: 'Rho', description: 'Interest rate sensitivity.', icon: '🏦', content: `<p>Rho measures how much an option's price changes for a 1% change in interest rates.</p><h3>Rho Characteristics:</h3><ul><li>Positive for calls, negative for puts</li><li>Small impact compared to other Greeks</li><li>More impact for longer-dated options</li></ul>`, keyTakeaways: ['Rho least important for most traders', 'Higher rates help calls, hurt puts', 'Mainly affects LEAPs/long-term options'], examples: [{ title: 'Rho Example', description: 'If interest rates rise by 1%, a LEAP might gain ₹10.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '10 min', order: 5 }
-    );
-
-    // Open Interest topics
-    topicsData.push(
-      { category: createdCategories[3]._id, title: 'OI Basics', description: 'Introduction to Open Interest.', icon: '📊', content: `<p>Open Interest (OI) is the total number of outstanding option contracts that have not been settled.</p><h3>Key Points:</h3><ul><li>One buyer + one seller = +1 OI</li><li>Closing a position reduces OI</li><li>OI shows liquidity and conviction</li><li>Combine with price for better signals</li></ul>`, keyTakeaways: ['OI ≠ Volume', 'Increasing OI = new money coming in', 'Use with price action'], examples: [{ title: 'Build Up', description: 'Price up + OI up = bullish, Price down + OI up = bearish' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '12 min', order: 1 },
-      { category: createdCategories[3]._id, title: 'Long Build Up', description: 'Identify bullish positions.', icon: '📈', content: `<p>Long Build Up: Price rising + OI rising = new longs are being created.</p><h3>Characteristics:</h3><ul><li>Sustained price move up</li><li>OI steadily increasing</li><li>Good volume confirmation</li><li>Often seen in strong trends</li></ul>`, keyTakeaways: ['Long build up = bullish conviction', 'Look at strike levels where OI builds', 'Great for trend following'], examples: [{ title: 'Strong Trend', description: 'Nifty rallies 300 points while OI increases by 20% = long build up.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '9 min', order: 2 },
-      { category: createdCategories[3]._id, title: 'Short Build Up', description: 'Identify bearish positions.', icon: '📉', content: `<p>Short Build Up: Price falling + OI rising = new shorts are being created.</p><h3>Characteristics:</h3><ul><li>Sustained price move down</li><li>OI steadily increasing</li><li>Good volume confirmation</li><li>Often seen in breakdowns</li></ul>`, keyTakeaways: ['Short build up = bearish conviction', 'Look at which strike levels get OI', 'Watch for covering later'], examples: [{ title: 'Breakdown', description: 'Stock falls 5% on high volume and rising OI = short build up.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '9 min', order: 3 },
-      { category: createdCategories[3]._id, title: 'Long Unwinding', description: 'Longs taking profits.', icon: '📉', content: `<p>Long Unwinding: Price falling + OI falling = Longs are booking profits.</p><h3>What it Means:</h3><ul><li>Traders exiting long positions</li><li>Price might retrace but trend could resume</li><li>Good time to take partial profits</li><li>Check if it's just profit booking or reversal</li></ul>`, keyTakeaways: ['Long unwinding = profit booking', 'Can be just a pullback', 'Look for price to find support'], examples: [{ title: 'Profit Taking', description: 'After a 300-point rally, Nifty falls 100 points with OI decreasing.' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '8 min', order: 4 },
-      { category: createdCategories[3]._id, title: 'Short Covering', description: 'Shorts getting squeezed.', icon: '📈', content: `<p>Short Covering: Price rising + OI falling = Shorts are getting squeezed.</p><h3>Short Squeeze:</h3><ul><li>Short sellers rush to buy back</li><li>Can create sharp, fast rallies</li><li>Often violent moves</li><li>Great for aggressive traders</li></ul>`, keyTakeaways: ['Short covering = sharp rallies', 'Squeezes can happen quickly', 'Perfect for momentum traders'], examples: [{ title: 'Squeeze', description: 'Stock rises 10% in a day with falling OI = massive short squeeze!' }], videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', duration: '10 min', order: 5 }
-    );
-
-    // More topics follow...
-    // Adding at least 5 topics for remaining categories
-    const remainingCategoryTopics = [
-      // Trading Strategies
-      [
-        { title: 'Straddle', description: 'Play volatility with straddles.', keyTakeaways: ['Buy both call & put at same strike', 'Profit from big move in either direction', 'Needs volatility to work'], duration: '15 min', order: 1 },
-        { title: 'Strangle', description: 'Lower cost volatility strategy.', keyTakeaways: ['Buy OTM call & put', 'Lower cost than straddle', 'Needs bigger move'], duration: '14 min', order: 2 },
-        { title: 'Iron Condor', description: 'Market neutral strategy.', keyTakeaways: ['Sell OTM spreads on both sides', 'Defined risk/reward', 'Best in sideways market'], duration: '18 min', order: 3 },
-        { title: 'Bull Call Spread', description: 'Limited risk bullish spread.', keyTakeaways: ['Buy lower strike call, sell higher', 'Limited profit, limited risk', 'Great for moderate bullishness'], duration: '13 min', order: 4 },
-        { title: 'Bear Put Spread', description: 'Limited risk bearish spread.', keyTakeaways: ['Buy higher strike put, sell lower', 'Limited profit, limited risk', 'Great for moderate bearishness'], duration: '13 min', order: 5 },
-        { title: 'Covered Call', description: 'Income from your long position.', keyTakeaways: ['Sell call against long stock', 'Generate monthly income', 'Limited upside'], duration: '12 min', order: 6 }
-      ],
-      // Risk Management
-      [
-        { title: 'Position Sizing', description: 'How much to risk per trade.', keyTakeaways: ['1-2% risk per trade standard', 'Never risk too much on one trade', 'Position size = function of stop loss'], duration: '14 min', order: 1 },
-        { title: 'Stop Loss', description: 'Your insurance against big losses.', keyTakeaways: ['ALWAYS use a stop loss', 'Place stop at logical levels', 'Trailing stops protect profits'], duration: '13 min', order: 2 },
-        { title: 'Risk Reward Ratio', description: 'Ensure your risk justifies reward.', keyTakeaways: ['Look for at least 1:2 R:R', 'Let winners run, cut losers short', 'Probabilities matter over time'], duration: '11 min', order: 3 },
-        { title: 'Capital Protection', description: 'Preserve your capital at all costs.', keyTakeaways: ['Capital preservation first', 'You can trade another day', 'Avoid blow-up risks'], duration: '12 min', order: 4 },
-        { title: 'Hedging', description: 'Protect your portfolio.', keyTakeaways: ['Hedge during uncertain times', 'Puts are like insurance', 'Can hedge with options or futures'], duration: '15 min', order: 5 }
-      ],
-      // Trading Psychology
-      [
-        { title: 'Discipline', description: 'The most important skill.', keyTakeaways: ['Follow your trading plan', 'Avoid impulsive decisions', 'Discipline beats talent'], duration: '12 min', order: 1 },
-        { title: 'Emotional Control', description: 'Don\'t let emotions decide.', keyTakeaways: ['Fear and greed are traders\' enemies', 'Stay calm and objective', 'Step back when emotional'], duration: '14 min', order: 2 },
-        { title: 'Fear and Greed', description: 'Recognize these emotions.', keyTakeaways: ['Fear misses opportunities', 'Greed stays in too long', 'Be aware of market sentiment'], duration: '11 min', order: 3 },
-        { title: 'Revenge Trading', description: 'The most expensive mistake.', keyTakeaways: ['Revenge trading = disaster', 'Take a break after a loss', 'Losses are normal'], duration: '13 min', order: 4 },
-        { title: 'Trading Journal', description: 'Track, review, improve.', keyTakeaways: ['Track every trade', 'Review monthly', 'Find your strengths/weaknesses'], duration: '10 min', order: 5 }
-      ],
-      // Swing Trading
-      [
-        { title: 'Trend Analysis', description: 'Identify the trend first.', keyTakeaways: ['Trend is your friend', 'Higher highs/higher lows = up', 'Use moving averages'], duration: '14 min', order: 1 },
-        { title: 'Swing Entry', description: 'Enter at the right time.', keyTakeaways: ['Wait for pullbacks', 'Buy on dips in uptrend', 'Look for confirmation'], duration: '13 min', order: 2 },
-        { title: 'Swing Exit', description: 'Take profits at the right time.', keyTakeaways: ['Target previous resistance/support', 'Trailing stop works well', 'Book partial profits'], duration: '11 min', order: 3 },
-        { title: 'Breakout Trading', description: 'Trade when levels break.', keyTakeaways: ['Breakouts from ranges work', 'Volume confirms breakouts', 'False breakouts happen'], duration: '12 min', order: 4 },
-        { title: 'Pullback Trading', description: 'Buy the dip in trend.', keyTakeaways: ['Pullbacks are opportunities', 'Let trend pull back then enter', 'Wait for confirmation'], duration: '13 min', order: 5 }
-      ],
-      // Intraday Trading
-      [
-        { title: 'Scalping', description: 'Quick in and out trades.', keyTakeaways: ['Hold for minutes to hours', 'Lots of trades, small profits', 'Needs tight spreads'], duration: '13 min', order: 1 },
-        { title: 'Momentum Trading', description: 'Go with the flow.', keyTakeaways: ['Buy strength, sell weakness', 'Momentum can persist', 'Don\'t fight the trend'], duration: '12 min', order: 2 },
-        { title: 'VWAP', description: 'Volume Weighted Average Price.', keyTakeaways: ['VWAP = institutional benchmark', 'Above VWAP = bullish', 'Great support/resistance'], duration: '15 min', order: 3 },
-        { title: 'ORB Strategy', description: 'Opening Range Breakout.', keyTakeaways: ['First 15-30 minute range', 'Breakout = direction for day', 'Classic intraday strategy'], duration: '14 min', order: 4 },
-        { title: 'Volume Analysis', description: 'Read what volume tells you.', keyTakeaways: ['Volume confirms moves', 'Volume precedes price', 'Study volume patterns'], duration: '12 min', order: 5 }
-      ],
-      // Futures & Options
-      [
-        { title: 'Futures Basics', description: 'Introduction to futures.', keyTakeaways: ['Futures = obligation, not right', 'Standardized contracts', 'Daily settlement'], duration: '14 min', order: 1 },
-        { title: 'Lot Size', description: 'Understand contract sizes.', keyTakeaways: ['Lot sizes vary by underlying', 'Nifty = 50, BankNifty = 25', 'Know your position size'], duration: '9 min', order: 2 },
-        { title: 'Margin Requirements', description: 'Margin for futures trading.', keyTakeaways: ['SPAN and exposure margin', 'Futures have higher margin than options', 'Margin changes daily'], duration: '12 min', order: 3 },
-        { title: 'Futures Hedging', description: 'Hedge with futures.', keyTakeaways: ['Perfect hedge for long/short', 'Use futures for large positions', 'Roll over expiring futures'], duration: '13 min', order: 4 },
-        { title: 'Futures Strategies', description: 'Futures trading strategies.', keyTakeaways: ['Futures for pure direction', 'Spread trading with futures', 'Calendar spreads'], duration: '15 min', order: 5 }
-      ]
+    // --- Process Quiz and Achievements ---
+    // Keep original quiz and achievements
+    const quizQuestions = [
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q1', question: 'What is the standard expiry day for weekly Index options (like Nifty 50) in India?', options: ['Every Friday', 'Every Thursday', 'Every Wednesday'], correctAnswer: 1, explanation: 'Weekly Nifty options in India expire every Thursday.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q2', question: 'Unlike individual stocks, Nifty and Bank Nifty index options in India are:', options: ['American-style (exercised anytime)', 'European-style (exercised only at expiry)', 'Cash-settled only before Wednesday'], correctAnswer: 1, explanation: 'Index options in India are European-style and can only be exercised at expiry.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q3', question: 'In India, if you hold an In-the-Money (ITM) stock option through expiry, how is it settled?', options: ['Cash settlement of the profit difference', 'Physical delivery (you must buy/deliver the actual shares)', 'The contract is canceled with zero value'], correctAnswer: 1, explanation: 'ITM stock options in India are physically settled at expiry.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q4', question: 'If Nifty is at 23,000 and you buy a 23,200 Call option, this option is:', options: ['In-the-Money (ITM)', 'At-the-Money (ATM)', 'Out-of-the-Money (OTM)'], correctAnswer: 2, explanation: 'A call option with a strike price higher than the current market price is out-of-the-money.' },
+      { category: 'Option Basics', difficulty: 'Easy', title: 'Options Basics Q5', question: 'Which index measures the expected volatility and "fear factor" in the Indian stock market?', options: ['India VIX', 'Nifty 500', 'Sectoral Index'], correctAnswer: 0, explanation: 'India VIX is the volatility index that measures market fear and expected volatility.' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q6', question: 'If you buy 1 lot of Nifty options, how many shares (lot size) are you controlling?', options: ['Exactly 100 shares', 'Exactly 25 or 75 shares (depending on current SEBI lot sizes)', 'Exactly 1 share'], correctAnswer: 1, explanation: 'SEBI adjusts Nifty lot sizes periodically, currently it varies (25 or 75 shares historically).' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q7', question: 'In India, option premiums are quoted in Rupees. If a premium is ₹50 and the lot size is 25, what is the total premium cost?', options: ['₹50', '₹1,250', '₹5,000'], correctAnswer: 1, explanation: 'Total cost = Premium per share × Lot size = 50 × 25 = ₹1,250.' },
+      { category: 'Option Basics', difficulty: 'Medium', title: 'Options Basics Q8', question: 'To comply with SEBI regulations, an option SELLER (writer) in India must maintain:', options: ['No balance, just pay premium', 'SPAN and Exposure Margin in their demat/trading account', 'A fixed ₹10,000 deposit for every trade'], correctAnswer: 1, explanation: 'Option sellers must maintain SPAN and Exposure Margin as collateral.' },
+      { category: 'Option Basics', difficulty: 'Hard', title: 'Options Basics Q9', question: 'What happens to the premium of an OTM Nifty option on the evening of its expiry day?', options: ['It becomes ₹0', 'It doubles in value', 'It remains equal to its intrinsic value'], correctAnswer: 0, explanation: 'Out-of-the-money options expire worthless, so their premium becomes zero.' },
+      { category: 'Option Basics', difficulty: 'Hard', title: 'Options Basics Q10', question: 'What is the official settlement price used for index options at 3:30 PM on expiry day?', options: ['The exact last traded price (LTP) at 3:30 PM', 'The opening price of the day', 'The volume-weighted average price (VWAP) of the last 30 minutes of trading'], correctAnswer: 2, explanation: 'Index options in India settle at the VWAP of the last 30 minutes of trading on expiry day.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q1', question: 'Which part of a candlestick represents the absolute highest price reached during a trading session?', options: ['The open price', 'The upper shadow (wick)', 'The real body', 'The lower shadow (wick)'], correctAnswer: 1, explanation: 'The upper shadow (wick) represents the highest price of the session.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q2', question: 'If a candlestick has a very long real green body, what does it tell you about market momentum?', options: ['Sellers are completely dominating the session', 'Buyers are strongly dominating the session', 'The market is trapped in heavy indecision', 'Trading volume has hit zero'], correctAnswer: 1, explanation: 'A long green body indicates strong bullish momentum and buyer dominance.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q3', question: 'What defines a standard Doji candlestick pattern?', options: ['Its body is twice as large as its wicks', 'It has no wicks on either side', 'The opening and closing prices are virtually equal', 'It always points straight downward'], correctAnswer: 2, explanation: 'A Doji forms when open and close prices are almost identical.' },
+      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts & Candles Q4', question: 'A Doji forming in the middle of a choppy, sideways trading range provides a highly reliable trend reversal signal.', options: ['True', 'False'], correctAnswer: 1, explanation: 'A Doji in the middle of a sideways range is not a reliable reversal signal.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q5', question: 'Where must a valid Hammer candlestick pattern always appear to be a valid signal?', options: ['At the absolute peak of a strong uptrend', 'Right in the middle of a flat consolidation range', 'At the bottom of a defined downtrend', 'Only when a stock drops on a Sunday morning'], correctAnswer: 2, explanation: 'A Hammer is a valid bullish reversal pattern only at the bottom of a downtrend.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q6', question: 'What is the strict structural rule regarding a Hammer\'s lower wick?', options: ['It must be shorter than the real body', 'It must be at least two to three times the length of the real body', 'It must be completely non-existent', 'It must match the length of the upper wick perfectly'], correctAnswer: 1, explanation: 'A Hammer\'s lower wick must be 2-3x the size of its real body.' },
+      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts & Candles Q7', question: 'What does the long upper shadow of a Shooting Star reveal?', options: ['Buyers pushed prices high but failed to maintain them by the close', 'Sellers tried to push prices down but failed completely', 'Buyers successfully held the highest price until the closing bell', 'The market has run out of available shares to trade'], correctAnswer: 0, explanation: 'Shooting Star\'s long upper shadow shows buyers failed to hold highs.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q8', question: 'If the very next candle breaks and closes above the high wick of a Shooting Star, the bearish reversal signal is strictly invalidated.', options: ['True', 'False'], correctAnswer: 0, explanation: 'If next candle closes above Shooting Star high, signal is invalidated.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q9', question: 'In a Bullish Engulfing pattern, what part of the first candle must the second green candle completely swallow?', options: ['Just the bottom lower wick', 'The entire real body of the first candle', 'The trading volume bar beneath the chart', 'The opening price only'], correctAnswer: 1, explanation: 'Bullish Engulfing requires second candle to engulf first\'s entire real body.' },
+      { category: 'Charts & Candles', difficulty: 'Hard', title: 'Charts & Candles Q10', question: 'What type of market signal is a Morning Star pattern?', options: ['A bearish continuation signal', 'A bearish reversal signal', 'A bullish reversal signal', 'A sideways consolidation signal'], correctAnswer: 2, explanation: 'Morning Star is a bullish reversal pattern.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q1', question: 'If an option has a Delta of 0.60, how much is its price expected to change if the underlying stock increases by $1?', options: ['It will increase by $1.00', 'It will increase by $0.60', 'It will decrease by $0.60', 'It will increase by 60%'], correctAnswer: 1, explanation: 'Delta indicates how much an option\'s price moves for a $1 change in the underlying asset.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q2', question: 'In practical trading, what does a Delta of 0.25 roughly estimate?', options: ['A 25% return on investment at expiration', 'The option loses $0.25 of value every day', 'A 25% probability that the option will expire in-the-money', 'The underlying stock price will move by 25%'], correctAnswer: 2, explanation: 'Delta is often used as a rough estimate of an option\'s probability of expiring ITM.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q3', question: 'Which option Greek measures the expected change in Delta for a $1 move in the underlying stock?', options: ['Gamma', 'Theta', 'Vega', 'Rho'], correctAnswer: 0, explanation: 'Gamma is the rate of change of Delta for every $1 move in the underlying stock.' },
+      { category: 'Option Greeks', difficulty: 'Easy', title: 'Option Greeks Q4', question: 'At what strike price location is Gamma typically at its highest mathematical value?', options: ['Deep out-of-the-money (OTM) options', 'Deep in-the-money (ITM) options', 'At-the-money (ATM) options', 'It is equal across all strike prices'], correctAnswer: 2, explanation: 'Gamma is typically highest for at-the-money (ATM) options.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q5', question: 'How does Theta primarily affect an investor holding a long (bought) option position?', options: ['It steadily erodes the extrinsic value of the option each day', 'It increases the intrinsic value of the option over time', 'It causes the underlying stock price to decline', 'It protects the option premium from market crashes'], correctAnswer: 0, explanation: 'Theta is negative for option buyers, eroding extrinsic value daily.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q6', question: 'At what point does time decay (Theta) accelerate the fastest for an at-the-money option?', options: ['More than a year away from expiration', 'In the final weeks and days leading up to expiration', 'Immediately in the first 24 hours after the option is created', 'Time decay is completely linear and never changes speed'], correctAnswer: 1, explanation: 'Time decay accelerates rapidly in the final weeks/days before expiration, especially for ATM options.' },
+      { category: 'Option Greeks', difficulty: 'Medium', title: 'Option Greeks Q7', question: 'If market-wide implied volatility (IV) suddenly spikes, which Greek indicates how much an option\'s premium will increase?', options: ['Delta', 'Gamma', 'Vega', 'Rho'], correctAnswer: 2, explanation: 'Vega measures an option\'s sensitivity to changes in implied volatility (IV).' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q8', question: 'What typically happens to an option\'s premium due to Vega immediately following a highly anticipated event like an earnings report?', options: ['The premium spikes aggressively because the event is over', 'The premium drops significantly due to a rapid collapse in implied volatility ("IV Crush")', 'The premium stays completely frozen until the next trading day', 'The intrinsic value immediately drops to zero'], correctAnswer: 1, explanation: 'After anticipated events, implied volatility often drops rapidly, causing an "IV Crush" that reduces option premiums.' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q9', question: 'For which type of option strategy is Rho (interest rate sensitivity) the most critical factor to actively monitor?', options: ['Zero days to expiration (0DTE) day trades', 'Weekly swing trades', 'Long-term options contracts, such as LEAPS (held for a year or more)', 'Overnight earnings gap plays'], correctAnswer: 2, explanation: 'Rho is most relevant for longer-term options like LEAPS, where interest rate impacts are more significant.' },
+      { category: 'Option Greeks', difficulty: 'Hard', title: 'Option Greeks Q10', question: 'How do the standard Delta values of basic long Call options compare to basic long Put options?', options: ['Calls have a positive Delta, while Puts have a negative Delta', 'Calls have a negative Delta, while Puts have a positive Delta', 'Both Calls and Puts have a positive Delta', 'Both Calls and Puts have a neutral Delta of zero'], correctAnswer: 0, explanation: 'Long calls have positive Delta, long puts have negative Delta.' }
     ];
 
-    // Add remaining topics
-    for (let i = 0; i < remainingCategoryTopics.length; i++) {
-      const categoryIndex = i + 4; // Skip first 4 categories already added
-      remainingCategoryTopics[i].forEach((topic, j) => {
-        topicsData.push({
-          category: createdCategories[categoryIndex]._id,
-          title: topic.title,
-          description: topic.description || `Learn about ${topic.title} in trading.`,
-          icon: '📖',
-          content: `<p>Welcome to this lesson on ${topic.title}. This topic covers important concepts for your trading education.</p><h3>Key Content:</h3><ul><li>Core concepts explained</li><li>Practical examples included</li><li>Strategies to apply in markets</li><li>Risk management considerations</li></ul>`,
-          keyTakeaways: topic.keyTakeaways || ['Master this topic', 'Practice on demo first', 'Risk management is key'],
-          examples: [{ title: `${topic.title} Example`, description: 'Apply these concepts in live markets carefully.' }],
-          videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-          duration: topic.duration,
-          order: topic.order
-        });
-      });
-    }
+    // Clear and reinsert quiz questions (optional, but to keep consistent)
+    await Quiz.deleteMany({});
+    await Quiz.insertMany(quizQuestions);
 
-    const createdTopics = await Topic.insertMany(topicsData);
-    console.log(`✅ Created ${createdTopics.length} topics`);
-
-    // --- Create 100+ Quiz Questions ---
-    const allQuizQuestions = [];
-
-    // Options Basics quiz (20 questions)
-    allQuizQuestions.push(
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q1', question: 'What does an option contract represent?', options: ['Obligation to buy/sell', 'Right, but not obligation to buy/sell', 'Stock share', 'Bond'], correctAnswer: 1, explanation: 'Options give rights, not obligations.' },
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q2', question: 'A call option gives the right to?', options: ['Sell', 'Buy', 'Hold', 'None'], correctAnswer: 1, explanation: 'Calls give right to buy.' },
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q3', question: 'A put option gives the right to?', options: ['Buy', 'Sell', 'Hold', 'None'], correctAnswer: 1, explanation: 'Puts give right to sell.' },
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q4', question: 'What is strike price?', options: ['Market price', 'Agreed price in contract', 'Average price', 'High price'], correctAnswer: 1, explanation: 'Strike is agreed price for contract.' },
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q5', question: 'What is option premium?', options: ['Market price of stock', 'Price paid to buy option', 'Brokerage', 'Tax'], correctAnswer: 1, explanation: 'Premium is what you pay for option.' },
-      { category: 'Options Basics', difficulty: 'Medium', title: 'Options Basics Q6', question: 'ATM means?', options: ['At The Money', 'After The Market', 'Above The Money', 'Automatic Trade Mode'], correctAnswer: 0, explanation: 'ATM = At The Money.' },
-      { category: 'Options Basics', difficulty: 'Medium', title: 'Options Basics Q7', question: 'ITM means?', options: ['In The Money', 'In Time Money', 'International Trade Market', 'Intraday Trading Model'], correctAnswer: 0, explanation: 'ITM = In The Money.' },
-      { category: 'Options Basics', difficulty: 'Medium', title: 'Options Basics Q8', question: 'What is intrinsic value?', options: ['Time value', 'Real value if ITM', 'Total premium', 'Broker fee'], correctAnswer: 1, explanation: 'Intrinsic value is real value of ITM option.' },
-      { category: 'Options Basics', difficulty: 'Hard', title: 'Options Basics Q9', question: 'Who faces theoretically unlimited loss?', options: ['Call Buyer', 'Call Seller', 'Put Buyer', 'All'], correctAnswer: 1, explanation: 'Call seller has unlimited risk.' },
-      { category: 'Options Basics', difficulty: 'Easy', title: 'Options Basics Q10', question: 'What happens to OTM options at expiry?', options: ['Get exercised', 'Become worthless', 'Automatically roll over', 'Convert to shares'], correctAnswer: 1, explanation: 'OTM options expire worthless.' }
-    );
-
-    // Add 10 more Options Basics questions
-    for (let i = 11; i <= 20; i++) {
-      allQuizQuestions.push({
-        category: 'Options Basics',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Options Basics Q${i}`,
-        question: `Options question ${i} about trading fundamentals?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Correct answer explanation goes here.'
-      });
-    }
-
-    // Charts & Candles quiz (15 questions)
-    allQuizQuestions.push(
-      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts Q1', question: 'A candlestick shows?', options: ['Open, High, Low, Close', 'Only Close', 'Only Open', 'Volume'], correctAnswer: 0, explanation: 'Candlestick shows OHLC.' },
-      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts Q2', question: 'A green candle means?', options: ['Close > Open', 'Close < Open', 'High = Low', 'Open = Close'], correctAnswer: 0, explanation: 'Green = bullish (close > open).' },
-      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts Q3', question: 'Hammer pattern appears at?', options: ['Tops', 'Bottoms', 'Middle of trends', 'Anywhere'], correctAnswer: 1, explanation: 'Hammer at bottom = bullish reversal.' },
-      { category: 'Charts & Candles', difficulty: 'Medium', title: 'Charts Q4', question: 'Shooting Star appears at?', options: ['Bottoms', 'Tops', 'Middle', 'Anywhere'], correctAnswer: 1, explanation: 'Shooting star at top = bearish reversal.' },
-      { category: 'Charts & Candles', difficulty: 'Easy', title: 'Charts Q5', question: 'Doji shows?', options: ['Strong trend', 'Indecision', 'Breakout', 'Volume'], correctAnswer: 1, explanation: 'Doji = indecision.' }
-    );
-
-    // Add 10 more Charts & Candles
-    for (let i = 6; i <= 15; i++) {
-      allQuizQuestions.push({
-        category: 'Charts & Candles',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Charts Q${i}`,
-        question: `Chart pattern question ${i} about technical analysis?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Technical analysis explanation here.'
-      });
-    }
-
-    // Option Greeks (15)
-    for (let i = 1; i <= 15; i++) {
-      allQuizQuestions.push({
-        category: 'Option Greeks',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Greeks Q${i}`,
-        question: `Greeks question ${i} about delta, gamma, theta, or vega?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Explanation about Greeks.'
-      });
-    }
-
-    // Open Interest (10)
-    for (let i = 1; i <= 10; i++) {
-      allQuizQuestions.push({
-        category: 'Open Interest',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `OI Q${i}`,
-        question: `Open Interest question ${i} about market positioning?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'OI concept explained.'
-      });
-    }
-
-    // Trading Strategies (10)
-    for (let i = 1; i <= 10; i++) {
-      allQuizQuestions.push({
-        category: 'Trading Strategies',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Strategy Q${i}`,
-        question: `Strategy question ${i} about options spreads and strategies?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Strategy concept explained.'
-      });
-    }
-
-    // Risk Management (10)
-    for (let i = 1; i <= 10; i++) {
-      allQuizQuestions.push({
-        category: 'Risk Management',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Risk Q${i}`,
-        question: `Risk management question ${i} about protecting capital?`,
-        options: ['Risk more on each trade', 'Protect capital first', 'Trade without stop loss', 'Gamble'],
-        correctAnswer: 1,
-        explanation: 'Capital preservation is the first rule.'
-      });
-    }
-
-    // Trading Psychology (10)
-    for (let i = 1; i <= 10; i++) {
-      allQuizQuestions.push({
-        category: 'Trading Psychology',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Psych Q${i}`,
-        question: `Psychology question ${i} about trading mindset?`,
-        options: ['Trade emotionally', 'Follow your plan', 'Revenge trade', 'Be greedy'],
-        correctAnswer: 1,
-        explanation: 'Following your plan is crucial.'
-      });
-    }
-
-    // Swing Trading (5)
-    for (let i = 1; i <= 5; i++) {
-      allQuizQuestions.push({
-        category: 'Swing Trading',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Swing Q${i}`,
-        question: `Swing trading question ${i} about trend trading?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Swing trading explanation here.'
-      });
-    }
-
-    // Intraday (5)
-    for (let i = 1; i <= 5; i++) {
-      allQuizQuestions.push({
-        category: 'Intraday Trading',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Intraday Q${i}`,
-        question: `Intraday question ${i} about day trading?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Intraday concept explained.'
-      });
-    }
-
-    // Futures (5)
-    for (let i = 1; i <= 5; i++) {
-      allQuizQuestions.push({
-        category: 'Futures & Options',
-        difficulty: ['Easy', 'Medium', 'Hard'][i % 3],
-        title: `Futures Q${i}`,
-        question: `Futures question ${i} about futures trading?`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: i % 4,
-        explanation: 'Futures concept explained.'
-      });
-    }
-
-    const createdQuizzes = await Quiz.insertMany(allQuizQuestions);
-    console.log(`✅ Created ${createdQuizzes.length} quiz questions`);
-
-    // --- Create Achievements ---
     const achievementsData = [
       { name: 'Beginner Trader', description: 'Complete your first learning topic!', icon: '📚', pointsRequired: 10, order: 1 },
-      { name: 'Options Explorer', description: 'Finish all Options Basics topics.', icon: '🎯', pointsRequired: 70, order: 2 },
-      { name: 'Quiz Champion', description: 'Score 80%+ on any category quiz.', icon: '🏆', pointsRequired: 100, order: 3 },
+      { name: 'Options Explorer', description: 'Finish all Option Basics topics.', icon: '🎯', pointsRequired: 70, order: 2 },
+      { name: 'Quiz Champion', description: 'Score 80%+ on the category quiz.', icon: '🏆', pointsRequired: 100, order: 3 },
       { name: 'Consistency Master', description: 'Complete topics 5 days in a row.', icon: '🔥', pointsRequired: 50, order: 4 },
-      { name: 'Risk Manager', description: 'Finish all Risk Management topics.', icon: '🛡️', pointsRequired: 50, order: 5 },
-      { name: 'Technical Analyst', description: 'Master Charts & Candles.', icon: '📊', pointsRequired: 60, order: 6 },
-      { name: 'Psychology Expert', description: 'Complete Trading Psychology.', icon: '🧠', pointsRequired: 50, order: 7 },
-      { name: 'Swing Trader', description: 'Finish Swing Trading module.', icon: '📅', pointsRequired: 50, order: 8 },
-      { name: 'Intraday Expert', description: 'Master Intraday Trading.', icon: '🕒', pointsRequired: 50, order: 9 },
-      { name: 'Bull Boom Legend', description: 'Complete ALL topics! You are a legend.', icon: '🚀', pointsRequired: 500, order: 10 }
+      { name: 'Bull Boom Learner', description: 'Complete the Option Basics module!', icon: '🚀', pointsRequired: 100, order: 5 }
     ];
-
-    const createdAchievements = await Achievement.insertMany(achievementsData);
-    console.log(`✅ Created ${createdAchievements.length} achievements`);
-
-    console.log('\n✨ SEED COMPLETE!');
-    console.log('Categories:', createdCategories.length);
-    console.log('Topics:', createdTopics.length);
-    console.log('Quizzes:', createdQuizzes.length);
-    console.log('Achievements:', createdAchievements.length);
+    await Achievement.deleteMany({});
+    await Achievement.insertMany(achievementsData);
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seeding error:', error);
+    console.error('Seed failed:', error);
     process.exit(1);
   }
 };

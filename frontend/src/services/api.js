@@ -12,9 +12,6 @@ if (!API_BASE_URL) {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor to add auth token
@@ -23,6 +20,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Don't set Content-Type for FormData, let axios handle it
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
     }
     return config;
   },
@@ -66,53 +67,69 @@ api.interceptors.response.use(
 
 // Dashboard API
 export const dashboardApi = {
-  getDashboard: () => api.get('/user/dashboard')
+  getDashboard: () => api.get('/user/dashboard').then(res => res.data)
 };
 
 // Auth API
 export const authApi = {
-  sendOtp: (email) => api.post('/auth/send-otp', { email }),
-  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
-  signup: (data) => api.post('/auth/signup', data),
-  login: (data) => api.post('/auth/login', data),
-  sendForgotPasswordOtp: (email) => api.post('/auth/forgot-password', { email }),
-  verifyForgotPasswordOtp: (email, otp) => api.post('/auth/verify-forgot-otp', { email, otp }),
-  resetPassword: (data) => api.post('/auth/reset-password', data),
-  validateToken: () => api.get('/auth/validate')
+  sendOtp: (email) => api.post('/auth/send-otp', { email }).then(res => res.data),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }).then(res => res.data),
+  signup: (data) => api.post('/auth/signup', data).then(res => res.data),
+  login: (data) => api.post('/auth/login', data).then(res => res.data),
+  sendForgotPasswordOtp: (email) => api.post('/auth/forgot-password', { email }).then(res => res.data),
+  verifyForgotPasswordOtp: (email, otp) => api.post('/auth/verify-forgot-otp', { email, otp }).then(res => res.data),
+  resetPassword: (data) => api.post('/auth/reset-password', data).then(res => res.data),
+  validateToken: () => api.get('/auth/validate').then(res => res.data)
 };
 
 // Orders & Trading API
 export const orderApi = {
-  buy: (data) => api.post('/orders/buy', data),
-  sell: (data) => api.post('/orders/sell', data),
-  getOrders: () => api.get('/orders'),
-  getHistory: () => api.get('/orders/history'),
-  getPrice: (symbol) => api.get(`/orders/price/${symbol}`),
-  deleteOrder: (id) => api.delete(`/orders/${id}`),
-  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status })
+  buy: (data) => api.post('/orders/buy', data).then(res => res.data),
+  sell: (data) => api.post('/orders/sell', data).then(res => res.data),
+  createOrder: (data) => api.post('/orders', data).then(res => res.data),
+  getOrders: () => api.get('/orders').then(res => res.data),
+  getHistory: () => api.get('/orders/history').then(res => res.data),
+  getPrice: (symbol) => api.get(`/orders/price/${symbol}`).then(res => res.data),
+  deleteOrder: (id) => api.delete(`/orders/${id}`).then(res => res.data),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }).then(res => res.data)
 };
 
 // Positions API
 export const positionApi = {
-  getPositions: () => api.get('/positions'),
-  getPositionById: (id) => api.get(`/positions/${id}`),
-  createPosition: (data) => api.post('/positions', data),
-  updatePosition: (id, data) => api.put(`/positions/${id}`, data),
-  deletePosition: (id) => api.delete(`/positions/${id}`)
+  getPositions: () => api.get('/positions').then(res => res.data),
+  getPositionById: (id) => api.get(`/positions/${id}`).then(res => res.data),
+  createPosition: (data) => api.post('/positions', data).then(res => res.data),
+  updatePosition: (id, data) => api.put(`/positions/${id}`, data).then(res => res.data),
+  deletePosition: (id) => api.delete(`/positions/${id}`).then(res => res.data)
+};
+
+// Watchlist API
+export const watchlistApi = {
+  getWatchlist: () => api.get('/watchlist').then(res => res.data),
+  addToWatchlist: (data) => api.post('/watchlist/add', data).then(res => res.data),
+  removeFromWatchlist: (id) => api.delete(`/watchlist/${id}`).then(res => res.data)
+};
+
+// User API
+export const userApi = {
+  getProfile: () => api.get('/user/profile').then(res => res.data),
+  updateProfile: (data) => api.put('/user/profile', data).then(res => res.data),
+  uploadProfileImage: (formData) => api.post('/user/upload-profile', formData).then(res => res.data),
+  deleteAccount: () => api.delete('/user/account').then(res => res.data)
 };
 
 // Education API functions
 export const educationApi = {
-  getDashboard: () => api.get('/education/dashboard'),
-  getCategories: () => api.get('/education/categories'),
-  getCategory: (id) => api.get(`/education/category/${id}`),
-  getTopic: (id) => api.get(`/education/topic/${id}`),
-  markTopicComplete: (topicId) => api.post('/education/topic/complete', { topicId }),
-  getQuizByCategory: (categoryId) => api.get(`/education/quiz/${categoryId}`),
-  submitQuiz: (data) => api.post('/education/quiz/submit', data),
-  getProgress: () => api.get('/education/progress'),
-  getStats: () => api.get('/education/stats'),
-  getLeaderboard: () => api.get('/education/leaderboard'),
+  getDashboard: () => api.get('/education/dashboard').then(res => res.data),
+  getCategories: () => api.get('/education/categories').then(res => res.data),
+  getCategory: (id) => api.get(`/education/category/${id}`).then(res => res.data),
+  getTopic: (id) => api.get(`/education/topic/${id}`).then(res => res.data),
+  markTopicComplete: (topicId) => api.post('/education/topic/complete', { topicId }).then(res => res.data),
+  getQuizByCategory: (categoryId) => api.get(`/education/quiz/${categoryId}`).then(res => res.data),
+  submitQuiz: (data) => api.post('/education/quiz/submit', data).then(res => res.data),
+  getProgress: () => api.get('/education/progress').then(res => res.data),
+  getStats: () => api.get('/education/stats').then(res => res.data),
+  getLeaderboard: () => api.get('/education/leaderboard').then(res => res.data),
 };
 
 export default api;
