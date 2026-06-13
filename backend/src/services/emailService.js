@@ -6,8 +6,8 @@ const createTransporter = () => {
 
   return nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -19,7 +19,7 @@ const createTransporter = () => {
     debug: true,
   });
 };
-
+console.log("Trying SMTP connection...");
 // Send OTP email
 export const sendOtpEmail = async (to, otp) => {
   const transporter = createTransporter();
@@ -76,6 +76,7 @@ export const sendOtpEmail = async (to, otp) => {
     console.error(error);
     console.error("CODE:", error.code);
     console.error("RESPONSE:", error.response);
+    console.error(error.command);
     throw error;
   }
   
