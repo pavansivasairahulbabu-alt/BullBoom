@@ -7,6 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import dns from "dns/promises";
 import connectDB from './config/db.js';
 import mongoose from 'mongoose';
 import authRoutes from './src/routes/authRoutes.js';
@@ -630,6 +631,25 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'Bull Boom Backend Running',
   });
+});
+
+// Test DNS Route for Brevo SMTP
+app.get("/api/test-dns", async (req, res) => {
+  try {
+    const lookup = await dns.lookup("smtp-relay.brevo.com", {
+      all: true,
+    });
+
+    res.json({
+      success: true,
+      lookup,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 
 // Auth Routes
