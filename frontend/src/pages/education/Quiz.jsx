@@ -170,12 +170,26 @@ export default function Quiz() {
             </div>
           )}
 
-          <button
-            onClick={handleFinishQuiz}
-            className="px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl transition-all"
-          >
-            Back to Category
-          </button>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => {
+                setAnsweredQuestions([]);
+                setCurrentIndex(0);
+                setSelectedAnswer(null);
+                setShowResult(false);
+                setCurrentQuestionResult(null);
+              }}
+              className="px-6 py-3 bg-white/5 text-white font-semibold rounded-xl transition-all hover:bg-white/10 border border-white/20"
+            >
+              Retake Quiz
+            </button>
+            <button
+              onClick={handleFinishQuiz}
+              className="px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl transition-all"
+            >
+              Back to Category
+            </button>
+          </div>
         </motion.div>
 
         <div className="space-y-4">
