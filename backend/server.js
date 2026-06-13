@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import mongoose from 'mongoose';
@@ -291,13 +292,18 @@ app.use('/api/education', educationRoutes);
 
 // Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
-  app.use(express.static(frontendDistPath));
+  const frontendPath = path.join(process.cwd(), "frontend", "dist");
+  if (fs.existsSync(frontendPath)) {
+    console.log("📂 Frontend dist found, serving static files");
+    app.use(express.static(frontendPath));
 
-  // Serve index.html for any non-API routes (SPA routing)
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(frontendDistPath, 'index.html'));
-  });
+    // Serve index.html for any non-API routes (SPA routing)
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(frontendPath, "index.html"));
+    });
+  } else {
+    console.log("⚠️ Frontend dist not found, serving API only");
+  }
 }
 
 // Error handling middleware
