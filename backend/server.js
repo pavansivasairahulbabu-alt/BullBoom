@@ -20,22 +20,7 @@ import Topic from "./src/models/Topic.model.js";
 import Quiz from "./src/models/Quiz.model.js";
 import Achievement from "./src/models/Achievement.model.js";
 
-import { isBrevoConfigured } from "./src/services/emailService.js";
-import emailRoutes from "./src/routes/emailRoutes.js";
-
-const validateEnv = () => {
-  const requiredVars = ["MONGO_URI", "JWT_SECRET", "CLIENT_URL", "NODE_ENV"];
-  const missing = requiredVars.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    console.error("❌ Missing required environment variables:", missing);
-    process.exit(1);
-  }
-
-  console.log("✅ All environment variables are set");
-};
-
-
+// Auto-seed learning data if database is empty
 const autoSeedLearningData = async () => {
   try {
     const categoryCount = await CourseCategory.countDocuments();
@@ -43,10 +28,7 @@ const autoSeedLearningData = async () => {
     if (categoryCount === 0) {
       console.log("🌱 No learning data found, auto-seeding database...");
 
-
-
-    // --- Create Categories ---
-
+      // --- Create Categories ---
       const categoriesData = [
         {
           name: "Options Basics",
@@ -141,9 +123,11 @@ const autoSeedLearningData = async () => {
       ];
 
       const createdCategories = await CourseCategory.insertMany(categoriesData);
-      console.log("✅ Created " + createdCategories.length + " categories");
+      console.log(`✅ Created ${createdCategories.length} categories`);
 
+      // --- Create Topics ---
       const topicsData = [];
+      // Options Basics topics
       topicsData.push(
         {
           category: createdCategories[0]._id,
@@ -1045,7 +1029,6 @@ const autoSeedLearningData = async () => {
         });
       }
       await Topic.insertMany(topicsData);
-      console.log("✅ Topics seeded");
 
       // --- Create Achievements ---
       const achievementsData = [
@@ -1121,9 +1104,7 @@ const autoSeedLearningData = async () => {
         },
       ];
 
-      // --- Process each category ---
-      for (const categoryData of allCategories) {
-        const { topics, ...categoryFields } = categoryData;
+      await Achievement.insertMany(achievementsData);
 
       console.log("✅ Auto-seeding complete!");
     } else {
@@ -1192,13 +1173,14 @@ app.use((err, req, res, next) => {
 });
 
 // 404 handler
-app.use((req, res) => {
+app.use((req, res, next) => {
   res.status(404).json({
     success: false,
     message: "Route Not Found",
   });
 });
 
+// Graceful shutdown function
 const gracefulShutdown = async (signal) => {
   console.log(`\nReceived ${signal}, shutting down gracefully...`);
   try {
@@ -1229,29 +1211,16 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
+// Start server and connect to DB
 const startServer = async () => {
   try {
-    validateEnv();
+    // Connect to MongoDB first
     await connectDB();
 
     // Auto-seed learning data if needed
     await autoSeedLearningData();
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🚀 Bull Boom Server Started");
-    console.log("🌐 Environment:", process.env.NODE_ENV);
-    console.log("📡 Port:", process.env.PORT || 5000);
-    console.log("🔗 Client URL:", process.env.CLIENT_URL);
-    console.log("🗄️  MongoDB Connected");
-    const config = isBrevoConfigured();
-    console.log(
-      "📧 Email:",
-      config.apiKeyConfigured && config.senderConfigured
-        ? "Brevo API Configured"
-        : "Not Configured",
-    );
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
+    // Start Express server
     const PORT = process.env.PORT || 5000;
     const server = app.listen(PORT, () => {
       console.log("━━━━━━━━━━━━━━━━━━");
@@ -1285,4 +1254,5 @@ const startServer = async () => {
   }
 };
 
+// Initialize the server
 startServer();
