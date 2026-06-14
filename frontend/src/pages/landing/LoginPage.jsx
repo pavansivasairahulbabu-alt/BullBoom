@@ -336,21 +336,31 @@ export default function LoginPage() {
                     <motion.button
                       onClick={renderProps.onClick}
                       disabled={renderProps.disabled || loading}
-                      whileHover={{ borderColor: 'rgba(50,205,50,0.5)', backgroundColor: 'rgba(255,255,255,0.05)' }}
-                      className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"
+                      whileHover={!loading ? { scale: 1.02, boxShadow: '0 0 40px rgba(57,255,20,0.25)' } : {}}
+                      className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-green-500/30 bg-[#0B1220] text-white hover:border-green-400 hover:bg-white/5 transition-all duration-300"
                     >
-                      <FaGoogle className="w-5 h-5" />
-                      <span className="font-medium">Continue with Google</span>
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin" />
+                          <span className="font-medium">Connecting to Google...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaGoogle className="w-5 h-5" />
+                          <span className="font-medium">Continue with Google</span>
+                        </>
+                      )}
                     </motion.button>
                   )}
                 />
               ) : (
                 <motion.button
-                  disabled
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 opacity-50 cursor-not-allowed transition-all"
+                  onClick={() => toast.info('Google Login is currently being configured.')}
+                  whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(57,255,20,0.25)' }}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-green-500/30 bg-[#0B1220] text-white hover:border-green-400 hover:bg-white/5 transition-all duration-300 cursor-pointer"
                 >
                   <FaGoogle className="w-5 h-5" />
-                  <span className="font-medium">Continue with Google (Unavailable)</span>
+                  <span className="font-medium">Continue with Google</span>
                 </motion.button>
               )}
               <motion.button
