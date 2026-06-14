@@ -334,10 +334,10 @@ export default function SignUpPage() {
               {/* Statistics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                 {[
-                  { value: "25K+", label: "Registered Traders" },
-                  { value: "1M+", label: "Trades Analyzed" },
-                  { value: "95%", label: "AI Accuracy" },
-                  { value: "₹100Cr+", label: "Trading Volume" },
+                  // { value: "25K+", label: "Registered Traders" },
+                  // { value: "1M+", label: "Trades Analyzed" },
+                  // { value: "95%", label: "AI Accuracy" },
+                  // { value: "₹100Cr+", label: "Trading Volume" },
                 ].map((stat, i) => (
                   <motion.div
                     key={i}
@@ -670,14 +670,14 @@ export default function SignUpPage() {
               {/* Divider - Only show on step 1 */}
               {step === 1 && (
                 <>
-                  <div className="my-8 flex items-center gap-4">
+                  {/* <div className="my-8 flex items-center gap-4">
                     <div className="flex-1 h-px bg-white/10" />
                     <span className="text-sm text-[#B8C0D4]">OR</span>
                     <div className="flex-1 h-px bg-white/10" />
-                  </div>
+                  </div> */}
 
                   {/* Social Login */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                     <motion.button
                       whileHover={{ borderColor: "rgba(50,205,50,0.5)", backgroundColor: "rgba(255,255,255,0.05)" }}
                       className="flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"
@@ -693,7 +693,7 @@ export default function SignUpPage() {
                       <FaTelegram className="w-5 h-5" />
                       <span className="font-medium">Continue with Telegram</span>
                     </motion.button>
-                  </div>
+                  </div> */}
                 </>
               )}
 

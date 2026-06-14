@@ -7,7 +7,8 @@ import {
   sendForgotPasswordOtp,
   verifyForgotPasswordOtp,
   resetPassword,
-  validateToken
+  validateToken,
+  googleLogin
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -33,6 +34,9 @@ router.post('/signup', signupUser);
 
 // Login route
 router.post('/login', loginUser);
+
+// Google login route
+router.post('/google', googleLogin);
 
 // Validate token
 router.get('/validate', protect, validateToken);

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaChartLine, FaChevronRight, FaTelegram } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { GoogleLogin } from '@react-oauth/google';
+import { authApi } from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   // Email regex to check if identifier is email or phone
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,31 +36,45 @@ export default function LoginPage() {
         requestBody.phone = identifier;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await authApi.login(requestBody);
 
-      const data = await response.json();
+      if (response.data.success) {
+        // Store token and user in localStorage
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        // Redirect to dashboard
+        navigate('/dashboard');
+        toast.success('Login successful!');
       }
-
-      // Store token and user in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to dashboard
-      navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      const response = await authApi.googleLogin(credentialResponse.credential);
+
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        navigate('/dashboard');
+        toast.success('Login successful!');
+      }
+    } catch (err) {
+      console.error('Google login error:', err);
+      toast.error(err.response?.data?.message || 'Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google login failed. Please try again.');
   };
 
   return (
@@ -310,13 +328,31 @@ export default function LoginPage() {
               </div>
 
               {/* Google Login */}
-              <motion.button
-                whileHover={{ borderColor: "rgba(50,205,50,0.5)", backgroundColor: "rgba(255,255,255,0.05)" }}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"
-              >
-                <FaGoogle className="w-5 h-5" />
-                <span className="font-medium">Continue with Google</span>
-              </motion.button>
+              {googleClientId ? (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  render={(renderProps) => (
+                    <motion.button
+                      onClick={renderProps.onClick}
+                      disabled={renderProps.disabled || loading}
+                      whileHover={{ borderColor: 'rgba(50,205,50,0.5)', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                      className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"
+                    >
+                      <FaGoogle className="w-5 h-5" />
+                      <span className="font-medium">Continue with Google</span>
+                    </motion.button>
+                  )}
+                />
+              ) : (
+                <motion.button
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 opacity-50 cursor-not-allowed transition-all"
+                >
+                  <FaGoogle className="w-5 h-5" />
+                  <span className="font-medium">Continue with Google (Unavailable)</span>
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ borderColor: "rgba(50,205,50,0.5)", backgroundColor: "rgba(255,255,255,0.05)" }}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"

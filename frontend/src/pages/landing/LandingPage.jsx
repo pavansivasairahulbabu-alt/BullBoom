@@ -174,11 +174,11 @@ export default function LandingPage() {
                 title: "Progress Tracking",
                 desc: "Earn achievements and certificates as you complete courses and modules"
               },
-              {
-                icon: "👥",
-                title: "Community Focus",
-                desc: "Connect with other traders, share insights, and grow together"
-              }
+              // {
+              //   icon: "👥",
+              //   title: "Community Focus",
+              //   desc: "Connect with other traders, share insights, and grow together"
+              // }
             ].map((benefit, i) => (
               <motion.div
                 key={i}

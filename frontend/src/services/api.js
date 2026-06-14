@@ -71,7 +71,8 @@ export const authApi = {
   sendForgotPasswordOtp: (email) => api.post('/auth/forgot-password', { email }),
   verifyForgotPasswordOtp: (email, otp) => api.post('/auth/verify-forgot-otp', { email, otp }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
-  validateToken: () => api.get('/auth/validate')
+  validateToken: () => api.get('/auth/validate'),
+  googleLogin: (token) => api.post('/auth/google', { token })
 };
 
 // Orders & Trading API

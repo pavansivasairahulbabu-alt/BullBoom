@@ -3,6 +3,20 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['email', 'google'],
+      default: 'email',
+    },
+    avatar: {
+      type: String,
+      default: '',
+    },
     fullName: {
       type: String,
       required: [true, 'Full name is required'],
@@ -23,13 +37,19 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: function() {
+        // Phone is required only if authProvider is 'email'
+        return this.authProvider === 'email';
+      },
       unique: true,
       trim: true,
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: function() {
+        // Password is required only if authProvider is 'email'
+        return this.authProvider === 'email';
+      },
     },
     referralCode: {
       type: String,
