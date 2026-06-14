@@ -109,12 +109,7 @@ export default function Education() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard
-          icon="📚"
-          value={dashboardData?.stats?.coursesEnrolled || 0}
-          label="Courses Enrolled"
-        />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           icon="✅"
           value={dashboardData?.stats?.coursesCompleted || 0}
@@ -130,11 +125,11 @@ export default function Education() {
           value={dashboardData?.stats?.currentStreak || 0}
           label="Current Streak"
         />
-        <StatCard
+        {/* <StatCard
           icon="🏆"
           value={dashboardData?.stats?.certificates || 0}
           label="Certificates"
-        />
+        /> */}
         <StatCard
           icon="📊"
           value={`${dashboardData?.stats?.skillScore || 0}`}
@@ -169,32 +164,42 @@ export default function Education() {
       </div>
 
       {/* Continue Learning */}
-      {dashboardData?.continueLearning && (
+      {(dashboardData?.continueLearning || (dashboardData?.stats?.completedTopics === dashboardData?.stats?.totalTopics && dashboardData?.stats?.totalTopics > 0)) ? (
         <div className="bg-[#0B1220] rounded-2xl border border-white/5 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="text-[#32CD32] w-5 h-5" />
-            <h2 className="text-xl font-bold text-white">Continue Learning</h2>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#32CD32]/20 to-[#39FF14]/20 rounded-xl flex items-center justify-center text-4xl">
-              {dashboardData.continueLearning.thumbnail}
+          {dashboardData?.stats?.completedTopics === dashboardData?.stats?.totalTopics ? (
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">🎉</div>
+              <h3 className="text-2xl font-bold text-white mb-2">Congratulations!</h3>
+              <p className="text-gray-400">All courses completed successfully.</p>
             </div>
-            <div className="flex-1">
-              <div className="text-gray-400 text-sm mb-1">{dashboardData.continueLearning.categoryName}</div>
-              <h3 className="text-xl font-bold text-white mb-2">{dashboardData.continueLearning.topicTitle}</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-                <span>{dashboardData.continueLearning.progress}% Complete</span>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="text-[#32CD32] w-5 h-5" />
+                <h2 className="text-xl font-bold text-white">Continue Learning</h2>
               </div>
-            </div>
-            <button
-              onClick={() => navigate(`/education/topic/${dashboardData.continueLearning.topicId}`)}
-              className="px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#32CD32]/30 transition-all flex items-center gap-2"
-            >
-              Continue <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#32CD32]/20 to-[#39FF14]/20 rounded-xl flex items-center justify-center text-4xl">
+                  {dashboardData.continueLearning.thumbnail}
+                </div>
+                <div className="flex-1">
+                  <div className="text-gray-400 text-sm mb-1">{dashboardData.continueLearning.categoryName}</div>
+                  <h3 className="text-xl font-bold text-white mb-2">{dashboardData.continueLearning.topicTitle}</h3>
+                  <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+                    <span>{dashboardData.continueLearning.progress}% Complete</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate(`/education/topic/${dashboardData.continueLearning.topicId}`)}
+                  className="px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#32CD32]/30 transition-all flex items-center gap-2"
+                >
+                  Continue <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      ) : null}
 
       {/* Categories */}
       <div className="space-y-4">
