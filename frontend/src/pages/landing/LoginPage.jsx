@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -56,7 +57,7 @@ export default function LoginPage() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      setLoading(true);
+      setGoogleLoading(true);
       const response = await authApi.googleLogin(credentialResponse.credential);
 
       if (response.data.success) {
@@ -69,7 +70,7 @@ export default function LoginPage() {
       console.error('Google login error:', err);
       toast.error(err.response?.data?.message || 'Google login failed');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -328,48 +329,58 @@ export default function LoginPage() {
               </div>
 
               {/* Google Login */}
-              {googleClientId ? (
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  render={(renderProps) => (
-                    <motion.button
-                      onClick={renderProps.onClick}
-                      disabled={renderProps.disabled || loading}
-                      whileHover={!loading ? { scale: 1.02, boxShadow: '0 0 40px rgba(57,255,20,0.25)' } : {}}
-                      className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-green-500/30 bg-[#0B1220] text-white hover:border-green-400 hover:bg-white/5 transition-all duration-300"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin" />
-                          <span className="font-medium">Connecting to Google...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaGoogle className="w-5 h-5" />
-                          <span className="font-medium">Continue with Google</span>
-                        </>
-                      )}
-                    </motion.button>
-                  )}
-                />
-              ) : (
+              <div className="w-full">
+                {googleClientId ? (
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    useOneTap={false}
+                    render={(renderProps) => (
+                      <motion.button
+                        onClick={renderProps.onClick}
+                        disabled={renderProps.disabled || googleLoading}
+                        whileHover={!renderProps.disabled && !googleLoading ? { scale: 1.02, boxShadow: "0 0 40px rgba(50,205,50,0.25)" } : {}}
+                        whileTap={!renderProps.disabled && !googleLoading ? { scale: 0.98 } : {}}
+                        className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 bg-[#0B1220] text-white hover:border-[rgba(50,205,50,0.5)] hover:bg-white/5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {googleLoading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin" />
+                            <span className="font-medium">Connecting to Google...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaGoogle className="w-5 h-5" />
+                            <span className="font-medium">Continue with Google</span>
+                          </>
+                        )}
+                      </motion.button>
+                    )}
+                  />
+                ) : (
+                  <motion.button
+                    onClick={() => toast.info('Google Login is currently being configured.')}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(50,205,50,0.25)" }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 bg-[#0B1220] text-white hover:border-[rgba(50,205,50,0.5)] hover:bg-white/5 transition-all duration-300 cursor-pointer"
+                  >
+                    <FaGoogle className="w-5 h-5" />
+                    <span className="font-medium">Continue with Google</span>
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Telegram Login */}
+              <div className="w-full mt-4">
                 <motion.button
-                  onClick={() => toast.info('Google Login is currently being configured.')}
-                  whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(57,255,20,0.25)' }}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-green-500/30 bg-[#0B1220] text-white hover:border-green-400 hover:bg-white/5 transition-all duration-300 cursor-pointer"
+                  whileHover={{ borderColor: "rgba(50,205,50,0.5)", backgroundColor: "rgba(255,255,255,0.05)" }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 bg-[#0B1220] text-white transition-all duration-300"
                 >
-                  <FaGoogle className="w-5 h-5" />
-                  <span className="font-medium">Continue with Google</span>
+                  <FaTelegram className="w-5 h-5" />
+                  <span className="font-medium">Continue with Telegram</span>
                 </motion.button>
-              )}
-              <motion.button
-                whileHover={{ borderColor: "rgba(50,205,50,0.5)", backgroundColor: "rgba(255,255,255,0.05)" }}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-white/10 transition-all"
-              >
-                <FaTelegram className="w-5 h-5" />
-                <span className="font-medium">Continue with Telegram</span>
-              </motion.button>
+              </div>
               {/* Create Account Link */}
               <div className="text-center mt-8 mb-6">
                 <span className="text-[#B8C0D4]">Don't have an account? </span>
