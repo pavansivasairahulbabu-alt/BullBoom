@@ -143,7 +143,7 @@ export default function LandingPage() {
       </section> */}
 
       {/* KEY BENEFITS */}
-      <section className="py-20">
+      <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">Why Choose Bull Boom?</h2>
           <p className="text-[#B8C0D4] text-lg text-center mb-12 max-w-2xl mx-auto">Everything you need to become a consistent, disciplined trader</p>
