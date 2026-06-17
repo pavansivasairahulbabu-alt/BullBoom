@@ -44,8 +44,8 @@ const CategoryCard = ({ category, onClick }) => (
         {category.difficulty}
       </span>
     </div>
-    <h3 className="text-xl font-bold text-white mb-2">{category.name}</h3>
-    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{category.description}</p>
+    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 break-words">{category.name}</h3>
+    <p className="text-gray-400 text-sm mb-4 break-words">{category.description}</p>
     <div className="space-y-2 mb-4">
       <div className="flex justify-between text-sm">
         <span className="text-gray-400">{category.topicCount} Topics</span>
@@ -96,12 +96,12 @@ export default function Education() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-8 overflow-x-hidden">
       {/* Header */}
       <div className="text-center md:text-left">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
           <GraduationCap className="text-[#32CD32] w-10 h-10" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white">Learning Hub</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">Learning Hub</h1>
         </div>
         <p className="text-gray-400 text-lg max-w-2xl">
           Master Trading, Options, Risk Management, and Trading Psychology with Bull Boom.
@@ -109,7 +109,7 @@ export default function Education() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           icon="✅"
           value={dashboardData?.stats?.coursesCompleted || 0}
@@ -139,7 +139,7 @@ export default function Education() {
 
       {/* Overall Progress */}
       <div className="bg-[#0B1220] rounded-2xl border border-white/5 p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <TrendingUp className="text-[#32CD32] w-6 h-6" />
             Overall Learning Progress
@@ -178,20 +178,20 @@ export default function Education() {
                 <Clock className="text-[#32CD32] w-5 h-5" />
                 <h2 className="text-xl font-bold text-white">Continue Learning</h2>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-[#32CD32]/20 to-[#39FF14]/20 rounded-xl flex items-center justify-center text-4xl">
                   {dashboardData.continueLearning.thumbnail}
                 </div>
                 <div className="flex-1">
                   <div className="text-gray-400 text-sm mb-1">{dashboardData.continueLearning.categoryName}</div>
-                  <h3 className="text-xl font-bold text-white mb-2">{dashboardData.continueLearning.topicTitle}</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2 break-words">{dashboardData.continueLearning.topicTitle}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
                     <span>{dashboardData.continueLearning.progress}% Complete</span>
                   </div>
                 </div>
                 <button
                   onClick={() => navigate(`/education/topic/${dashboardData.continueLearning.topicId}`)}
-                  className="px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#32CD32]/30 transition-all flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#32CD32] to-[#39FF14] text-[#050816] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#32CD32]/30 transition-all flex items-center gap-2"
                 >
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>

@@ -507,11 +507,11 @@ export default function Profile() {
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6"
+            className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto mx-auto my-8"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold">Edit Profile</h3>
@@ -635,11 +635,11 @@ export default function Profile() {
 
       {/* Delete Account Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6"
+            className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto mx-auto my-8"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-red-400">Delete Account</h3>

@@ -13,11 +13,11 @@ export default function DashboardLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050816] text-white font-sans">
+    <div className="min-h-screen bg-[#050816] text-white font-sans overflow-x-hidden">
       <Sidebar />
 
       {/* Main Content */}
-      <div className="md:ml-64 min-h-screen pb-24 md:pb-0">
+      <div className="md:ml-64 min-h-screen pb-24 md:pb-0 overflow-x-hidden">
         <Outlet />
       </div>
 

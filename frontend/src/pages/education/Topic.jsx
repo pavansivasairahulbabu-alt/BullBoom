@@ -137,8 +137,8 @@ export default function Topic() {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-4 border-t border-white/5">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center sm:justify-between pt-4 border-t border-white/5">
+            <div className="flex flex-wrap justify-center sm:justify-end gap-3 w-full sm:w-auto">
               {prevTopic && (
                 <button
                   onClick={() => navigate(`/education/topic/${prevTopic._id}`)}
@@ -149,7 +149,7 @@ export default function Topic() {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center sm:justify-start gap-3 w-full sm:w-auto">
               {!data?.userProgress?.completed && (
                 <button
                   onClick={markComplete}
@@ -162,7 +162,7 @@ export default function Topic() {
               {nextTopic && (
                 <button
                   onClick={() => navigate(`/education/topic/${nextTopic._id}`)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-gray-300"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-gray-300 min-w-[100px]"
                 >
                   Next
                   <ArrowRightCircle className="w-5 h-5" />
