@@ -1,6 +1,11 @@
 import dotenv from "dotenv";
-// Load environment variables FIRST before any other imports!
-dotenv.config();
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+
+// Load environment variables from this backend folder, regardless of cwd.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, ".env") });
 
 import express from "express";
 import cors from "cors";
