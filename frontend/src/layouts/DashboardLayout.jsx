@@ -22,21 +22,23 @@ export default function DashboardLayout() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0B1220] border-t border-white/10 z-50 flex items-center justify-around py-3 md:hidden">
-        {bottomNavItems.map((item, index) => (
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 px-2 py-2 backdrop-blur-xl md:hidden pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto grid max-w-md grid-cols-4 items-center gap-1">
+        {bottomNavItems.map((item) => (
           <Link
-            key={index}
+            key={item.path}
             to={item.path}
-            className={`flex flex-col items-center gap-1 px-3 py-1 ${
+            className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-2 py-2 text-center transition-colors ${
               location.pathname === item.path
                 ? "text-[#32CD32]"
                 : "text-[#B8C0D4]"
             }`}
           >
-            <div className="w-5 h-5">{item.icon}</div>
-            <span className="text-[10px]">{item.label}</span>
+            <div className="h-5 w-5">{item.icon}</div>
+            <span className="w-full truncate text-[10px] leading-none">{item.label}</span>
           </Link>
         ))}
+        </div>
       </div>
     </div>
   );
