@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import AppRoutes from "./routes/AppRoutes";
 import { authApi } from './services/api';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   useEffect(() => {
@@ -20,7 +21,12 @@ function App() {
     validateToken();
   }, []);
 
-  return <AppRoutes />;
+  return (
+    <>
+      <AppRoutes />
+      <Toaster position="top-right" />
+    </>
+  );
 }
 
 export default App;
