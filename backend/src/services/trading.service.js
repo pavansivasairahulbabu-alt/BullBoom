@@ -6,7 +6,7 @@ import TradeHistory from '../models/TradeHistory.model.js';
 import { getMarketData } from './marketDataProvider.js';
 import { calculatePortfolio } from './portfolio.service.js';
 
-export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NSE' }) => {
+export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NSE', pattern, support, resistance, ema200 }) => {
   const session = await User.startSession();
   session.startTransaction();
 
@@ -40,6 +40,10 @@ export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NS
         quantity,
         price: currentPrice,
         status: 'EXECUTED',
+        pattern,
+        support,
+        resistance,
+        ema200,
       }],
       { session }
     );
@@ -55,6 +59,10 @@ export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NS
         entryPrice: currentPrice,
         currentPrice,
         orderId: order[0]._id,
+        pattern,
+        support,
+        resistance,
+        ema200,
       }],
       { session }
     );

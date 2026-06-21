@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FaSearch,
   FaPlus,
@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { orderApi, watchlistApi } from '../services/api';
+import { marketStore } from '../services/marketStore';
 
 const COMMON_SYMBOLS = [
   'NIFTY',
@@ -54,6 +55,30 @@ const getChangeStyles = (value) => {
 };
 
 const WatchlistRow = ({ item, onDelete, onBuy, onSell, onChart }) => {
+  const [marketData, setMarketData] = useState(null);
+  const prevPriceRef = useRef(null);
+  const [priceFlash, setPriceFlash] = useState(null); // 'up', 'down', null
+
+  useEffect(() => {
+    const unsubscribe = marketStore.subscribe((data) => {
+      const symbolData = data[item.symbol];
+      if (symbolData) {
+        if (prevPriceRef.current !== null && prevPriceRef.current !== symbolData.currentPrice) {
+          setPriceFlash(symbolData.currentPrice > prevPriceRef.current ? 'up' : 'down');
+          setTimeout(() => setPriceFlash(null), 300);
+        }
+        prevPriceRef.current = symbolData.currentPrice;
+        setMarketData(symbolData);
+      }
+    });
+
+    return unsubscribe;
+  }, [item.symbol]);
+
+  const price = marketData ? marketData.currentPrice : item.price;
+  const change = marketData ? marketData.change : item.change;
+  const changePercent = marketData ? marketData.changePercent : item.changePercent;
+
   return (
     <motion.tr
       initial={{ opacity: 0, x: -20 }}
@@ -63,31 +88,43 @@ const WatchlistRow = ({ item, onDelete, onBuy, onSell, onChart }) => {
     >
       <td className="py-4 pr-4 font-semibold whitespace-nowrap align-top">{item.symbol}</td>
       <td className="py-4 pr-4 whitespace-nowrap text-[#B8C0D4] align-top">{item.exchange}</td>
-      <td className="py-4 pr-4 font-semibold whitespace-nowrap align-top">₹{formatNumber(item.price)}</td>
-      <td className={`py-4 pr-4 font-semibold whitespace-nowrap align-top ${getChangeStyles(item.change)}`}>
-        {formatSignedNumber(item.change, { prefix: '₹' })}
+      <td className="py-4 pr-4 font-semibold whitespace-nowrap align-top">
+        <motion.span
+          key={price}
+          initial={{
+            backgroundColor: priceFlash === 'up' ? 'rgba(50,205,50,0.3)' : priceFlash === 'down' ? 'rgba(248,113,113,0.3)' : 'transparent'
+          }}
+          animate={{ backgroundColor: 'transparent' }}
+          transition={{ duration: 0.3 }}
+          className="px-2 py-1 rounded"
+        >
+          ₹{formatNumber(price)}
+        </motion.span>
       </td>
-      <td className={`py-4 pr-4 font-semibold whitespace-nowrap align-top ${getChangeStyles(item.changePercent)}`}>
-        {formatSignedNumber(item.changePercent, { suffix: '%' })}
+      <td className={`py-4 pr-4 font-semibold whitespace-nowrap align-top ${getChangeStyles(change)}`}>
+        {formatSignedNumber(change, { prefix: '₹' })}
+      </td>
+      <td className={`py-4 pr-4 font-semibold whitespace-nowrap align-top ${getChangeStyles(changePercent)}`}>
+        {formatSignedNumber(changePercent, { suffix: '%' })}
       </td>
       <td className="py-4 align-top">
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => onBuy(item)}
+            onClick={() => onBuy({ ...item, marketData })}
             className="flex h-8 w-8 items-center justify-center rounded bg-[#32CD32] font-bold text-[#050816] transition-all hover:shadow-lg hover:shadow-[#32CD32]/30"
             title="Buy"
           >
             B
           </button>
           <button
-            onClick={() => onSell(item)}
+            onClick={() => onSell({ ...item, marketData })}
             className="flex h-8 w-8 items-center justify-center rounded bg-red-500 font-bold text-white transition-all hover:shadow-lg hover:shadow-red-500/30"
             title="Sell"
           >
             S
           </button>
           <button
-            onClick={() => onChart(item)}
+            onClick={() => onChart({ ...item, marketData })}
             className="flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-[#0B1220] text-white transition-all hover:border-[#32CD32]/30 hover:text-[#32CD32]"
             title="Chart"
           >
@@ -107,6 +144,30 @@ const WatchlistRow = ({ item, onDelete, onBuy, onSell, onChart }) => {
 };
 
 const WatchlistCard = ({ item, onDelete, onBuy, onSell, onChart }) => {
+  const [marketData, setMarketData] = useState(null);
+  const prevPriceRef = useRef(null);
+  const [priceFlash, setPriceFlash] = useState(null); // 'up', 'down', null
+
+  useEffect(() => {
+    const unsubscribe = marketStore.subscribe((data) => {
+      const symbolData = data[item.symbol];
+      if (symbolData) {
+        if (prevPriceRef.current !== null && prevPriceRef.current !== symbolData.currentPrice) {
+          setPriceFlash(symbolData.currentPrice > prevPriceRef.current ? 'up' : 'down');
+          setTimeout(() => setPriceFlash(null), 300);
+        }
+        prevPriceRef.current = symbolData.currentPrice;
+        setMarketData(symbolData);
+      }
+    });
+
+    return unsubscribe;
+  }, [item.symbol]);
+
+  const price = marketData ? marketData.currentPrice : item.price;
+  const change = marketData ? marketData.change : item.change;
+  const changePercent = marketData ? marketData.changePercent : item.changePercent;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -129,40 +190,50 @@ const WatchlistCard = ({ item, onDelete, onBuy, onSell, onChart }) => {
 
         <div className="text-right">
           <div className="text-[11px] uppercase tracking-[0.18em] text-[#B8C0D4]">LTP</div>
-          <div className="mt-1 text-lg font-semibold text-white">₹{formatNumber(item.price)}</div>
+          <motion.div
+            key={price}
+            initial={{
+              backgroundColor: priceFlash === 'up' ? 'rgba(50,205,50,0.3)' : priceFlash === 'down' ? 'rgba(248,113,113,0.3)' : 'transparent'
+            }}
+            animate={{ backgroundColor: 'transparent' }}
+            transition={{ duration: 0.3 }}
+            className="mt-1 inline-block px-2 py-1 rounded text-lg font-semibold text-white"
+          >
+            ₹{formatNumber(price)}
+          </motion.div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
           <div className="text-[11px] uppercase tracking-[0.16em] text-[#B8C0D4]">Change</div>
-          <div className={`mt-1 whitespace-nowrap text-sm font-semibold ${getChangeStyles(item.change)}`}>
-            {formatSignedNumber(item.change, { prefix: '₹' })}
+          <div className={`mt-1 whitespace-nowrap text-sm font-semibold ${getChangeStyles(change)}`}>
+            {formatSignedNumber(change, { prefix: '₹' })}
           </div>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
           <div className="text-[11px] uppercase tracking-[0.16em] text-[#B8C0D4]">Change %</div>
-          <div className={`mt-1 whitespace-nowrap text-sm font-semibold ${getChangeStyles(item.changePercent)}`}>
-            {formatSignedNumber(item.changePercent, { suffix: '%' })}
+          <div className={`mt-1 whitespace-nowrap text-sm font-semibold ${getChangeStyles(changePercent)}`}>
+            {formatSignedNumber(changePercent, { suffix: '%' })}
           </div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <button
-          onClick={() => onBuy(item)}
+          onClick={() => onBuy({ ...item, marketData })}
           className="flex h-11 items-center justify-center rounded-xl bg-[#32CD32] px-3 text-sm font-semibold text-[#050816] transition-all active:scale-[0.99]"
         >
           Buy
         </button>
         <button
-          onClick={() => onSell(item)}
+          onClick={() => onSell({ ...item, marketData })}
           className="flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white transition-all active:scale-[0.99]"
         >
           Sell
         </button>
         <button
-          onClick={() => onChart(item)}
+          onClick={() => onChart({ ...item, marketData })}
           className="flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-[#B8C0D4] transition-all active:scale-[0.99]"
         >
           Chart
@@ -321,8 +392,24 @@ const DeleteConfirmModal = ({ isOpen, onClose, item, onConfirm }) => {
 const BuyModal = ({ isOpen, onClose, item, onSuccess }) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [marketData, setMarketData] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen || !item) return;
+    
+    const unsubscribe = marketStore.subscribe((data) => {
+      const symbolData = data[item.symbol];
+      if (symbolData) {
+        setMarketData(symbolData);
+      }
+    });
+    
+    return unsubscribe;
+  }, [isOpen, item]);
 
   if (!isOpen || !item) return null;
+
+  const price = marketData ? marketData.currentPrice : item.price;
 
   const handleBuy = async () => {
     setLoading(true);
@@ -331,6 +418,10 @@ const BuyModal = ({ isOpen, onClose, item, onSuccess }) => {
         symbol: item.symbol,
         quantity,
         exchange: item.exchange,
+        pattern: marketData?.activePattern,
+        support: marketData?.support,
+        resistance: marketData?.resistance,
+        ema200: marketData?.ema200,
       });
 
       if (response.success) {
@@ -381,11 +472,11 @@ const BuyModal = ({ isOpen, onClose, item, onSuccess }) => {
           <div className="rounded-xl border border-white/10 bg-[#050816] p-4">
             <div className="flex justify-between text-sm">
               <span className="text-[#B8C0D4]">Current Price</span>
-              <span className="font-semibold">₹{formatNumber(item.price)}</span>
+              <span className="font-semibold">₹{formatNumber(price)}</span>
             </div>
             <div className="mt-2 flex justify-between text-sm">
               <span className="text-[#B8C0D4]">Estimated Cost</span>
-              <span className="font-semibold">₹{formatNumber((item.price || 0) * quantity)}</span>
+              <span className="font-semibold">₹{formatNumber((price || 0) * quantity)}</span>
             </div>
           </div>
         </div>

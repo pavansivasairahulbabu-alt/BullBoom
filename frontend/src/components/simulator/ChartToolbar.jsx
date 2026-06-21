@@ -16,8 +16,8 @@ export default function ChartToolbar({ symbol, onReset, timeframe, onTimeframeCh
             className="bg-[#1A1F3A] text-white border border-white/10 rounded-md px-2 py-1 outline-none font-bold"
           >
             <option value={1}>1 Minute</option>
-            <option value={3}>3 Minutes</option>
             <option value={5}>5 Minutes</option>
+            <option value={15}>15 Minutes</option>
           </select>
         </div>
         <div className="flex items-center gap-2">

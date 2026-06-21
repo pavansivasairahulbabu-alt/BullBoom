@@ -53,6 +53,20 @@ const positionSchema = new mongoose.Schema(
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Order'
+    },
+    // Trading simulation additional fields
+    pattern: {
+      type: String,
+      trim: true
+    },
+    support: {
+      type: Number
+    },
+    resistance: {
+      type: Number
+    },
+    ema200: {
+      type: Number
     }
   },
   {

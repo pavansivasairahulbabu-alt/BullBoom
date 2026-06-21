@@ -52,7 +52,7 @@ export const getWatchlist = async (req, res) => {
 
     // If user has no watchlist items, add defaults
     if (watchlist.length === 0) {
-      const defaultSymbols = ["NIFTY", "BANKNIFTY", "RELIANCE", "INFY", "TCS"];
+      const defaultSymbols = ["NIFTY", "BANKNIFTY", "SENSEX", "RELIANCE", "INFY", "TCS"];
       const defaultWatchlistItems = defaultSymbols.map(symbol => ({
         userId: req.user._id,
         symbol,
@@ -60,6 +60,17 @@ export const getWatchlist = async (req, res) => {
       }));
       await Watchlist.insertMany(defaultWatchlistItems);
       watchlist = await Watchlist.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    } else {
+      // Check if SENSEX is missing, add it if needed
+      const hasSensex = watchlist.some(item => item.symbol === "SENSEX");
+      if (!hasSensex) {
+        await Watchlist.create({
+          userId: req.user._id,
+          symbol: "SENSEX",
+          exchange: "NSE"
+        });
+        watchlist = await Watchlist.find({ userId: req.user._id }).sort({ createdAt: -1 });
+      }
     }
 
     // Get market data for each watchlist item
