@@ -14,6 +14,7 @@ import { orderApi, watchlistApi } from '../services/api';
 const COMMON_SYMBOLS = [
   'NIFTY',
   'BANKNIFTY',
+  'SENSEX',
   'RELIANCE',
   'INFY',
   'TCS',
