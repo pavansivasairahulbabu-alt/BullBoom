@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { createChart, CandlestickSeries, LineSeries } from "lightweight-charts";
+
 import {
   generateInitialCandles,
   generateNextCandle,
