@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema(
         return this.authProvider === 'email';
       },
       unique: true,
+      sparse: true,
       trim: true,
     },
     password: {

@@ -10,7 +10,7 @@ import {
 } from "../services/emailService.js";
 import mongoose from "mongoose";
 import { OAuth2Client } from "google-auth-library";
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // Generate JWT token
 const generateToken = (id, role) => {
@@ -575,6 +575,8 @@ export const googleLogin = async (req, res) => {
       });
     }
 
+    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
     // Verify the Google token
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -774,7 +776,7 @@ export const googleLogin = async (req, res) => {
     console.error("Google login error:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: error.message || "Internal server error",
     });
   }
 };
