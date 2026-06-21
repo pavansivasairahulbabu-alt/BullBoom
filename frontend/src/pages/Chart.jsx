@@ -20,6 +20,7 @@ const PATTERN_TOASTS = {
 export default function Chart() {
   const { symbol } = useParams();
   const navigate = useNavigate();
+  const [timeframe, setTimeframe] = useState(1);
   const [simData, setSimData] = useState({
     currentPrice: 22500,
     ema200: 22500,
@@ -57,6 +58,11 @@ export default function Chart() {
     prevPatternRef.current = null;
   };
 
+  const handleTimeframeChange = (newTimeframe) => {
+    setTimeframe(newTimeframe);
+    handleReset();
+  };
+
   return (
     <div className="min-h-screen bg-[#050816] p-4 md:p-8">
       <div className="fixed inset-0 opacity-20 pointer-events-none">
@@ -87,7 +93,12 @@ export default function Chart() {
           <FaArrowLeft /> Back
         </button>
 
-        <ChartToolbar symbol={symbol} onReset={handleReset} />
+        <ChartToolbar 
+          symbol={symbol} 
+          onReset={handleReset} 
+          timeframe={timeframe}
+          onTimeframeChange={handleTimeframeChange}
+        />
 
         <SimulationStats
           currentPrice={simData.currentPrice}
@@ -98,7 +109,7 @@ export default function Chart() {
         />
 
         <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} />
+          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} timeframe={timeframe} />
           <ChartLegend />
           <TradingTipsPanel simData={simData} />
         </div>

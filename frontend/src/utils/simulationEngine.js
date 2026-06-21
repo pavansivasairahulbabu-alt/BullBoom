@@ -19,6 +19,7 @@ class SimulationEngine {
     this.ema200 = null;
     this.touchesAtResistance = 0;
     this.touchesAtSupport = 0;
+    this.timeframe = 1; // Default to 1 minute
   }
 
   reset() {
@@ -32,16 +33,20 @@ class SimulationEngine {
     this.touchesAtSupport = 0;
   }
 
+  setTimeframe(minutes) {
+    this.timeframe = minutes;
+  }
+
   generateInitialCandles(count = 200) {
     this.reset();
     let currentPrice = BASE_PRICE;
-    let time = Math.floor(Date.now() / 1000) - count * 60;
+    let time = Math.floor(Date.now() / 1000) - count * 60 * this.timeframe;
 
     for (let i = 0; i < count; i++) {
       const candle = this._generateSingleCandle(currentPrice, time);
       this.candles.push(candle);
       currentPrice = candle.close;
-      time += 60;
+      time += 60 * this.timeframe;
       this._updateIndicators();
       this._detectPatterns();
     }
@@ -52,7 +57,7 @@ class SimulationEngine {
   generateNextCandle() {
     if (!this.candles.length) return null;
     const lastCandle = this.candles[this.candles.length - 1];
-    const newCandle = this._generateSingleCandle(lastCandle.close, lastCandle.time + 60);
+    const newCandle = this._generateSingleCandle(lastCandle.close, lastCandle.time + 60 * this.timeframe);
     this.candles.push(newCandle);
     this._updateIndicators();
     this._detectPatterns();
@@ -267,3 +272,4 @@ export const calculateEMA200 = (candles) => simulationEngine.calculateEMA200(can
 export const calculateSupportResistance = (candles) => simulationEngine.calculateSupportResistance(candles);
 export const getStats = () => simulationEngine.getStats();
 export const resetEngine = () => simulationEngine.reset();
+export const setTimeframe = (minutes) => simulationEngine.setTimeframe(minutes);

@@ -6,6 +6,7 @@ import {
   generateNextCandle,
   getStats,
   resetEngine,
+  setTimeframe
 } from "../../utils/simulationEngine";
 
 const MARKET_STATE_LABELS = {
@@ -16,7 +17,7 @@ const MARKET_STATE_LABELS = {
   BREAKOUT_DOWN: { text: "Breakout Down", color: "#FF4D4D" },
 };
 
-export default function TradingSimulator({ onStatsUpdate }) {
+export default function TradingSimulator({ onStatsUpdate, timeframe = 1 }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const intervalRef = useRef(null);
@@ -24,6 +25,7 @@ export default function TradingSimulator({ onStatsUpdate }) {
 
   useEffect(() => {
     resetEngine();
+    setTimeframe(timeframe);
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {

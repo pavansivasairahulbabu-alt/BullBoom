@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ChartToolbar({ symbol, onReset }) {
+export default function ChartToolbar({ symbol, onReset, timeframe, onTimeframeChange }) {
   return (
     <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-6">
@@ -10,7 +10,15 @@ export default function ChartToolbar({ symbol, onReset }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400 text-sm">Timeframe</span>
-          <span className="text-white font-bold">1 Minute</span>
+          <select 
+            value={timeframe} 
+            onChange={(e) => onTimeframeChange(Number(e.target.value))}
+            className="bg-[#1A1F3A] text-white border border-white/10 rounded-md px-2 py-1 outline-none font-bold"
+          >
+            <option value={1}>1 Minute</option>
+            <option value={3}>3 Minutes</option>
+            <option value={5}>5 Minutes</option>
+          </select>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400 text-sm">Status</span>
