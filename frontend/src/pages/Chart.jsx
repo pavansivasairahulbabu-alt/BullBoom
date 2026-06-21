@@ -1,126 +1,64 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
+import TradingSimulator from "../components/simulator/TradingSimulator";
+import ChartToolbar from "../components/simulator/ChartToolbar";
+import SimulationStats from "../components/simulator/SimulationStats";
+import TradingTipsPanel from "../components/simulator/TradingTipsPanel";
+import ChartLegend from "../components/simulator/ChartLegend";
 
-// --- Symbol Mapping Utility ---
-const getTradingViewSymbol = (symbol) => {
-  const symbolMap = {
-    NIFTY50: "NSE:NIFTY",
-    NIFTY: "NSE:NIFTY",
-    BANKNIFTY: "NSE:BANKNIFTY",
-  };
-  return symbolMap[symbol.toUpperCase()] || `NSE:${symbol.toUpperCase()}`;
-};
-
-// --- Script Loading Utility ---
-let isScriptLoaded = false;
-
-const loadTradingViewScript = () => {
-  return new Promise((resolve, reject) => {
-    if (window.TradingView) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
-    script.async = true;
-
-    script.onload = () => {
-      resolve();
-    };
-
-    script.onerror = () => {
-      reject(new Error("TradingView script failed to load"));
-    };
-
-    document.body.appendChild(script);
-  });
+const PATTERN_TOASTS = {
+  "Double Bottom": "📈 Double Bottom Detected - Bullish Reversal Pattern",
+  "Double Top": "📉 Double Top Detected - Bearish Reversal Pattern",
+  "Bull Flag": "🚀 Bull Flag Detected - Trend Continuation Pattern",
+  "Bear Flag": "🔻 Bear Flag Detected - Trend Continuation Pattern",
+  "Head & Shoulders": "⚠️ Head & Shoulders Detected - Bearish Reversal Pattern",
 };
 
 export default function Chart() {
   const { symbol } = useParams();
   const navigate = useNavigate();
-  const widgetContainerRef = useRef(null);
-  const widgetInstanceRef = useRef(null);
-  const [loadingError, setLoadingError] = useState(false);
+  const [simData, setSimData] = useState({
+    currentPrice: 22500,
+    ema200: 22500,
+    support: 22400,
+    resistance: 22600,
+    activePattern: null,
+    marketState: "RANGE",
+  });
+  const [resetKey, setResetKey] = useState(0);
+  const prevPatternRef = useRef(null);
+
+  const handleStatsUpdate = useCallback((stats) => {
+    setSimData(stats);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initializeWidget = async () => {
-      try {
-        // --- 1. Safe checks ---
-        if (!isMounted || !symbol || !widgetContainerRef.current) {
-          return;
-        }
-
-        // --- 2. Clear existing widget if exists ---
-        if (widgetContainerRef.current) {
-          widgetContainerRef.current.innerHTML = "";
-        }
-
-        // --- 3. Load script ---
-        await loadTradingViewScript();
-
-        // --- 4. Verify prerequisites ---
-        if (!isMounted || !widgetContainerRef.current || !window.TradingView) {
-          if (isMounted && !window.TradingView) {
-            setLoadingError(true);
-          }
-          return;
-        }
-
-        // --- 5. Initialize widget ---
-        widgetInstanceRef.current = new window.TradingView.widget({
-          width: "100%",
-          height: "600px",
-          symbol: getTradingViewSymbol(symbol),
-          interval: "D",
-          timezone: "Etc/UTC",
-          theme: "dark",
-          style: "1",
-          locale: "en",
-          toolbar_bg: "#050816",
-          enable_publishing: false,
-          allow_symbol_change: false,
-          container_id: "tradingview-widget",
-
-          hide_top_toolbar: true,
-          hide_legend: false,
-          save_image: false,
+    if (simData.activePattern && simData.activePattern !== prevPatternRef.current) {
+      prevPatternRef.current = simData.activePattern;
+      const message = PATTERN_TOASTS[simData.activePattern];
+      if (message) {
+        toast(message, {
+          duration: 5000,
+          style: {
+          backgroundColor: "#0B1220",
+          color: "white",
+          border: "1px solid #FFD700",
+          },
         });
-        if (isMounted) {
-          setLoadingError(false);
-        }
-      } catch (error) {
-        console.error("TradingView widget error:", error);
-        if (isMounted) {
-          setLoadingError(true);
-        }
       }
-    };
+    }
+  }, [simData.activePattern]);
 
-    initializeWidget();
-
-    // --- Cleanup function ---
-    return () => {
-      isMounted = false;
-      if (widgetContainerRef.current) {
-        try {
-          widgetContainerRef.current.innerHTML = "";
-        } catch (e) {
-          // Ignore any errors during cleanup
-        }
-      }
-      widgetInstanceRef.current = null;
-    };
-  }, [symbol]);
+  const handleReset = () => {
+    setResetKey((prev) => prev + 1);
+    prevPatternRef.current = null;
+  };
 
   return (
     <div className="min-h-screen bg-[#050816] p-4 md:p-8">
-      {/* Animated Background */}
       <div className="fixed inset-0 opacity-20 pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <motion.div
@@ -148,23 +86,21 @@ export default function Chart() {
         >
           <FaArrowLeft /> Back
         </button>
+
+        <ChartToolbar symbol={symbol} onReset={handleReset} />
+
+        <SimulationStats
+          currentPrice={simData.currentPrice}
+          ema200={simData.ema200}
+          support={simData.support}
+          resistance={simData.resistance}
+          activePattern={simData.activePattern}
+        />
+
         <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl md:text-2xl font-bold">{symbol}</h1>
-          </div>
-          {loadingError ? (
-            <div className="text-[#B8C0D4] text-center py-10">
-              <p className="text-lg mb-2">Failed to load chart</p>
-              <p>Please check your internet connection and refresh the page.</p>
-            </div>
-          ) : (
-            <div
-              id="tradingview-widget"
-              ref={widgetContainerRef}
-              className="rounded-xl overflow-hidden border border-white/10"
-              style={{ minHeight: "600px" }}
-            />
-          )}
+          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} />
+          <ChartLegend />
+          <TradingTipsPanel simData={simData} />
         </div>
       </div>
     </div>

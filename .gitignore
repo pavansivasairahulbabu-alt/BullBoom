@@ -32,3 +32,6 @@ lerna-debug.log*
 
 # Misc
 .cache/
+.env
+frontend/.env
+backend/.env
