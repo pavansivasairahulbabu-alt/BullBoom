@@ -13,6 +13,7 @@ import LoginPage from '../pages/landing/LoginPage';
 import SignUpPage from '../pages/landing/SignUpPage';
 import ForgotPasswordPage from '../pages/landing/ForgotPasswordPage';
 import Chart from '../pages/Chart';
+import TradePage from '../pages/trade/TradePage';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 export default function AppRoutes() {
@@ -30,6 +31,7 @@ export default function AppRoutes() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/positions" element={<Positions />} />
           <Route path="/chart/:symbol" element={<Chart />} />
+          <Route path="/trade/:type/:symbol" element={<TradePage />} />
           <Route path="/education" element={<Education />} />
           <Route path="/education/category/:id" element={<Category />} />
           <Route path="/education/topic/:id" element={<Topic />} />

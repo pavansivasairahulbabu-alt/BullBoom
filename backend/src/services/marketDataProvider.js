@@ -12,6 +12,7 @@ const previousClose = new Map();
 const initialPrices = {
   "NIFTY": 24500.25,
   "BANKNIFTY": 51200.45,
+  "SENSEX": 74500.50,
   "RELIANCE": 2950.30,
   "INFY": 1820.75,
   "TCS": 4250.50,

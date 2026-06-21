@@ -112,7 +112,7 @@ export const getPrice = async (req, res) => {
 // Legacy createOrder (kept for compatibility)
 export const createOrder = async (req, res) => {
   try {
-    const { symbol, exchange, orderType, quantity, price } = req.body;
+    const { symbol, exchange, orderType, quantity, price, pattern, support, resistance, ema200 } = req.body;
 
     if (!symbol || !exchange || !orderType || !quantity || !price) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
@@ -125,6 +125,10 @@ export const createOrder = async (req, res) => {
       orderType: orderType.toUpperCase(),
       quantity: Number(quantity),
       price: Number(price),
+      pattern,
+      support,
+      resistance,
+      ema200,
     });
 
     res.status(201).json({ success: true, order, message: 'Order placed successfully' });

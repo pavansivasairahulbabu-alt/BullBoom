@@ -44,6 +44,20 @@ const orderSchema = new mongoose.Schema(
       uppercase: true,
       enum: ['OPEN', 'EXECUTED', 'CANCELLED'],
       default: 'OPEN'
+    },
+    // Trading simulation additional fields
+    pattern: {
+      type: String,
+      trim: true
+    },
+    support: {
+      type: Number
+    },
+    resistance: {
+      type: Number
+    },
+    ema200: {
+      type: Number
     }
   },
   { timestamps: true }

@@ -15,7 +15,7 @@ export default function SimulationStats({
         <p className="text-white text-xl font-bold">{currentPrice.toFixed(2)}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-gray-400 text-sm">EMA 200</p>
+        {/* <p className="text-gray-400 text-sm">EMA 200</p> */}
         <p className="text-white text-xl font-bold">{ema200 ? ema200.toFixed(2) : '---'}</p>
       </div>
       <div className="space-y-1">
