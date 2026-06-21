@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createChart, CandlestickSeries } from "lightweight-charts";
+import { createChart, CandlestickSeries, LineSeries } from "lightweight-charts";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowUp, FaArrowDown, FaTimes } from "react-icons/fa";
-
 import {
   generateInitialCandles,
   generateNextCandle,
   getStats,
   resetEngine,
+  setSymbol,
   setTimeframe,
-  setSymbol
 } from "../../utils/simulationEngine";
 import { marketStore } from "../../services/marketStore";
 
@@ -26,13 +25,17 @@ const MARKET_STATE_LABELS = {
 const isMobile = () => window.innerWidth < 768;
 const isTablet = () => window.innerWidth >= 768 && window.innerWidth < 1024;
 
-export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol = "NIFTY" }) {
+export default function TradingSimulator({
+  onStatsUpdate,
+  timeframe = 1,
+  symbol = "NIFTY",
+}) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const intervalRef = useRef(null);
   const prevPatternRef = useRef(null);
   const initialCandlesRef = useRef([]);
-  
+
   const [selectedCandle, setSelectedCandle] = useState(null);
   const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
   const [hoverCandle, setHoverCandle] = useState(null);
@@ -46,19 +49,21 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
     const handleResize = () => {
       setIsMobileDevice(isMobile());
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
+    // Reset engine and set symbol/timeframe
+    resetEngine();
     setSymbol(symbol);
     setTimeframe(timeframe);
-    resetEngine();
     setTrades([]);
+
     if (!chartContainerRef.current) return;
 
     let lastShownDate = null;
-    
+
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: "solid", color: "#050816" },
@@ -79,11 +84,11 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
         tickMarkFormatter: (time, tickMarkType, locale) => {
           const date = new Date(time * 1000);
           const day = date.getDate();
-          const hours = date.getHours().toString().padStart(2, '0');
-          const minutes = date.getMinutes().toString().padStart(2, '0');
-          
+          const hours = date.getHours().toString().padStart(2, "0");
+          const minutes = date.getMinutes().toString().padStart(2, "0");
+
           const showDate = lastShownDate !== day;
-          
+
           if (showDate) {
             lastShownDate = day;
             return `${day} ${hours}:${minutes}`;
@@ -104,6 +109,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
 
     let supportLine = null;
     let resistanceLine = null;
+    let emaLine = null;
 
     chartRef.current = { chart, candlestickSeries };
 
@@ -132,24 +138,26 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
     // Chart click handler
     chart.subscribeClick((param) => {
       if (!param.time) return;
-      
-      const candle = initialCandlesRef.current.find(c => c.time === param.time);
+
+      const candle = initialCandlesRef.current.find(
+        (c) => c.time === param.time,
+      );
       if (candle) {
         setSelectedCandle(candle);
-        
+
         if (!isMobileDevice) {
           // Calculate panel position for desktop/tablet
           const rect = chartContainerRef.current.getBoundingClientRect();
           const x = param.point.x;
           const y = param.point.y;
-          
+
           const panelWidth = isTablet() ? 280 : 320;
           const panelHeight = 350;
-          
+
           // Adjust position to keep panel inside container
           let left = x + 20;
           let top = y - panelHeight / 2;
-          
+
           if (left + panelWidth > rect.width) {
             left = x - panelWidth - 20;
           }
@@ -159,7 +167,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
           if (top + panelHeight > rect.height) {
             top = rect.height - panelHeight - 10;
           }
-          
+
           setPanelPosition({ top, left, width: panelWidth });
         }
       }
@@ -171,8 +179,10 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
         setHoverCandle(null);
         return;
       }
-      
-      const candle = initialCandlesRef.current.find(c => c.time === param.time);
+
+      const candle = initialCandlesRef.current.find(
+        (c) => c.time === param.time,
+      );
       if (candle && param.point) {
         setHoverCandle(candle);
         setHoverPosition({ x: param.point.x, y: param.point.y });
@@ -189,7 +199,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
       if (newCandle && chartRef.current?.candlestickSeries) {
         chartRef.current.candlestickSeries.update(newCandle);
         initialCandlesRef.current.push(newCandle);
-        
+
         // Update market store
         marketStore.setSymbolData(symbol, {
           currentPrice: newCandle.close,
@@ -207,6 +217,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
       // Update support/resistance lines
       if (supportLine) candlestickSeries.removePriceLine(supportLine);
       if (resistanceLine) candlestickSeries.removePriceLine(resistanceLine);
+      if (emaLine) candlestickSeries.removePriceLine(emaLine);
 
       if (stats.support) {
         supportLine = candlestickSeries.createPriceLine({
@@ -230,21 +241,43 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
         });
       }
 
+      if (stats.ema200) {
+        emaLine = candlestickSeries.createPriceLine({
+          price: stats.ema200,
+          color: "#FFD700",
+          lineWidth: 1,
+          lineStyle: 1,
+          axisLabelVisible: true,
+          title: "EMA200",
+        });
+      }
+
       // Update badge
-      const state = MARKET_STATE_LABELS[stats.marketState] || MARKET_STATE_LABELS.RANGE;
+      const state =
+        MARKET_STATE_LABELS[stats.marketState] || MARKET_STATE_LABELS.RANGE;
       badgeContainer.textContent = state.text;
       badgeContainer.style.backgroundColor = `${state.color}33`;
       badgeContainer.style.border = `2px solid ${state.color}`;
       badgeContainer.style.color = state.color;
 
       // Pattern detection for toasts
-      if (stats.activePattern && stats.activePattern !== prevPatternRef.current) {
+      if (
+        stats.activePattern &&
+        stats.activePattern !== prevPatternRef.current
+      ) {
         prevPatternRef.current = stats.activePattern;
         // We'll handle toast in parent
       }
 
       if (onStatsUpdate) {
-        onStatsUpdate({ ...stats, newPattern: stats.activePattern !== prevPatternRef.current && stats.activePattern ? stats.activePattern : null });
+        onStatsUpdate({
+          ...stats,
+          newPattern:
+            stats.activePattern !== prevPatternRef.current &&
+            stats.activePattern
+              ? stats.activePattern
+              : null,
+        });
         if (stats.activePattern) prevPatternRef.current = stats.activePattern;
       }
     }, 1000);
@@ -268,7 +301,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
   const handleBuy = () => {
     if (!selectedCandle) return;
     const stats = getStats();
-    setTrades([...trades, { ...selectedCandle, type: 'buy' }]);
+    setTrades([...trades, { ...selectedCandle, type: "buy" }]);
     navigate(`/trade/buy/${symbol}`, {
       state: {
         entryPrice: selectedCandle.close,
@@ -277,14 +310,14 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
         resistance: stats.resistance,
         ema200: stats.ema200,
         entryTime: new Date(selectedCandle.time * 1000).toISOString(),
-      }
+      },
     });
   };
 
   const handleSell = () => {
     if (!selectedCandle) return;
     const stats = getStats();
-    setTrades([...trades, { ...selectedCandle, type: 'sell' }]);
+    setTrades([...trades, { ...selectedCandle, type: "sell" }]);
     navigate(`/trade/sell/${symbol}`, {
       state: {
         entryPrice: selectedCandle.close,
@@ -293,7 +326,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
         resistance: stats.resistance,
         ema200: stats.ema200,
         entryTime: new Date(selectedCandle.time * 1000).toISOString(),
-      }
+      },
     });
   };
 
@@ -303,15 +336,15 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
     const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
+    const month = date.toLocaleString("default", { month: "short" });
     const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
     const displayHours = hours % 12 || 12;
-    
+
     return {
       date: `${day} ${month}`,
-      time: `${displayHours}:${minutes} ${ampm}`
+      time: `${displayHours}:${minutes} ${ampm}`,
     };
   };
 
@@ -319,7 +352,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
 
   const getEmaStatus = () => {
     if (!selectedCandle || !stats.ema200) return null;
-    return selectedCandle.close > stats.ema200 ? 'Above' : 'Below';
+    return selectedCandle.close > stats.ema200 ? "Above" : "Below";
   };
 
   return (
@@ -338,7 +371,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
             style={{
               left: hoverPosition.x + 15,
               top: hoverPosition.y - 40,
-              pointerEvents: 'none'
+              pointerEvents: "none",
             }}
             className="absolute z-40 bg-[#0B1220]/90 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 text-xs shadow-lg"
           >
@@ -367,7 +400,7 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
             style={{
               top: panelPosition.top,
               left: panelPosition.left,
-              width: panelPosition.width
+              width: panelPosition.width,
             }}
             className="absolute z-50 bg-[#0B1220]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col"
           >
@@ -382,10 +415,13 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
             {/* Header */}
             <div className="p-4 border-b border-white/10">
               <div className="text-xs text-[#B8C0D4] mb-1">
-                {formatDate(selectedCandle.time).date} | {formatDate(selectedCandle.time).time}
+                {formatDate(selectedCandle.time).date} |{" "}
+                {formatDate(selectedCandle.time).time}
               </div>
               {stats.activePattern && (
-                <div className="text-sm text-[#32CD32] font-bold">{stats.activePattern}</div>
+                <div className="text-sm text-[#32CD32] font-bold">
+                  {stats.activePattern}
+                </div>
               )}
             </div>
 
@@ -395,48 +431,70 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
               <div className="grid grid-cols-4 gap-2 text-xs">
                 <div className="bg-[#050816]/50 rounded-lg p-2 border border-white/5">
                   <div className="text-[#B8C0D4]">Open</div>
-                  <div className="text-white font-semibold">{selectedCandle.open.toFixed(2)}</div>
+                  <div className="text-white font-semibold">
+                    {selectedCandle.open.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-2 border border-white/5">
                   <div className="text-[#B8C0D4]">High</div>
-                  <div className="text-green-400 font-semibold">{selectedCandle.high.toFixed(2)}</div>
+                  <div className="text-green-400 font-semibold">
+                    {selectedCandle.high.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-2 border border-white/5">
                   <div className="text-[#B8C0D4]">Low</div>
-                  <div className="text-red-400 font-semibold">{selectedCandle.low.toFixed(2)}</div>
+                  <div className="text-red-400 font-semibold">
+                    {selectedCandle.low.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-2 border border-white/5">
                   <div className="text-[#B8C0D4]">Close</div>
-                  <div className="text-white font-semibold">{selectedCandle.close.toFixed(2)}</div>
+                  <div className="text-white font-semibold">
+                    {selectedCandle.close.toFixed(2)}
+                  </div>
                 </div>
               </div>
 
               {/* Info Cards */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
-                  <div className="text-[#B8C0D4] text-xs mb-1">Pattern Confidence</div>
-                  <div className="text-yellow-400 font-bold text-sm">{getConfidence()}%</div>
+                  <div className="text-[#B8C0D4] text-xs mb-1">
+                    Pattern Confidence
+                  </div>
+                  <div className="text-yellow-400 font-bold text-sm">
+                    {getConfidence()}%
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">EMA200</div>
-                  <div className={`font-bold text-sm ${getEmaStatus() === 'Above' ? 'text-green-400' : 'text-red-400'}`}>
-                    {getEmaStatus() || '-'}
+                  <div
+                    className={`font-bold text-sm ${getEmaStatus() === "Above" ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {getEmaStatus() || "-"}
                   </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">Support</div>
-                  <div className="text-green-400 font-bold text-sm">{stats.support?.toFixed(2) || '-'}</div>
+                  <div className="text-green-400 font-bold text-sm">
+                    {stats.support?.toFixed(2) || "-"}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">Resistance</div>
-                  <div className="text-red-400 font-bold text-sm">{stats.resistance?.toFixed(2) || '-'}</div>
+                  <div className="text-red-400 font-bold text-sm">
+                    {stats.resistance?.toFixed(2) || "-"}
+                  </div>
                 </div>
               </div>
 
               <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
-                <div className="text-[#B8C0D4] text-xs mb-1">Trend Direction</div>
-                <div className={`font-bold text-sm ${stats.marketState.includes('UP') || stats.marketState.includes('BREAKOUT_UP') ? 'text-green-400' : stats.marketState.includes('DOWN') || stats.marketState.includes('BREAKOUT_DOWN') ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {MARKET_STATE_LABELS[stats.marketState]?.text || 'Range'}
+                <div className="text-[#B8C0D4] text-xs mb-1">
+                  Trend Direction
+                </div>
+                <div
+                  className={`font-bold text-sm ${stats.marketState?.includes("UP") || stats.marketState?.includes("BREAKOUT_UP") ? "text-green-400" : stats.marketState?.includes("DOWN") || stats.marketState?.includes("BREAKOUT_DOWN") ? "text-red-400" : "text-yellow-400"}`}
+                >
+                  {MARKET_STATE_LABELS[stats.marketState]?.text || "Range"}
                 </div>
               </div>
             </div>
@@ -490,10 +548,13 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
             {/* Header */}
             <div className="px-6 pb-4 pt-2">
               <div className="text-sm text-[#B8C0D4] mb-1">
-                {formatDate(selectedCandle.time).date} | {formatDate(selectedCandle.time).time}
+                {formatDate(selectedCandle.time).date} |{" "}
+                {formatDate(selectedCandle.time).time}
               </div>
               {stats.activePattern && (
-                <div className="text-lg text-[#32CD32] font-bold">{stats.activePattern}</div>
+                <div className="text-lg text-[#32CD32] font-bold">
+                  {stats.activePattern}
+                </div>
               )}
             </div>
 
@@ -503,48 +564,70 @@ export default function TradingSimulator({ onStatsUpdate, timeframe = 1, symbol 
               <div className="grid grid-cols-4 gap-2 text-xs">
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4]">Open</div>
-                  <div className="text-white font-semibold">{selectedCandle.open.toFixed(2)}</div>
+                  <div className="text-white font-semibold">
+                    {selectedCandle.open.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4]">High</div>
-                  <div className="text-green-400 font-semibold">{selectedCandle.high.toFixed(2)}</div>
+                  <div className="text-green-400 font-semibold">
+                    {selectedCandle.high.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4]">Low</div>
-                  <div className="text-red-400 font-semibold">{selectedCandle.low.toFixed(2)}</div>
+                  <div className="text-red-400 font-semibold">
+                    {selectedCandle.low.toFixed(2)}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4]">Close</div>
-                  <div className="text-white font-semibold">{selectedCandle.close.toFixed(2)}</div>
+                  <div className="text-white font-semibold">
+                    {selectedCandle.close.toFixed(2)}
+                  </div>
                 </div>
               </div>
 
               {/* Info Cards */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
-                  <div className="text-[#B8C0D4] text-xs mb-1">Pattern Confidence</div>
-                  <div className="text-yellow-400 font-bold text-sm">{getConfidence()}%</div>
+                  <div className="text-[#B8C0D4] text-xs mb-1">
+                    Pattern Confidence
+                  </div>
+                  <div className="text-yellow-400 font-bold text-sm">
+                    {getConfidence()}%
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">EMA200</div>
-                  <div className={`font-bold text-sm ${getEmaStatus() === 'Above' ? 'text-green-400' : 'text-red-400'}`}>
-                    {getEmaStatus() || '-'}
+                  <div
+                    className={`font-bold text-sm ${getEmaStatus() === "Above" ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {getEmaStatus() || "-"}
                   </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">Support</div>
-                  <div className="text-green-400 font-bold text-sm">{stats.support?.toFixed(2) || '-'}</div>
+                  <div className="text-green-400 font-bold text-sm">
+                    {stats.support?.toFixed(2) || "-"}
+                  </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">Resistance</div>
-                  <div className="text-red-400 font-bold text-sm">{stats.resistance?.toFixed(2) || '-'}</div>
+                  <div className="text-red-400 font-bold text-sm">
+                    {stats.resistance?.toFixed(2) || "-"}
+                  </div>
                 </div>
               </div>
 
               <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
-                <div className="text-[#B8C0D4] text-xs mb-1">Trend Direction</div>
-                <div className={`font-bold text-sm ${stats.marketState.includes('UP') || stats.marketState.includes('BREAKOUT_UP') ? 'text-green-400' : stats.marketState.includes('DOWN') || stats.marketState.includes('BREAKOUT_DOWN') ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {MARKET_STATE_LABELS[stats.marketState]?.text || 'Range'}
+                <div className="text-[#B8C0D4] text-xs mb-1">
+                  Trend Direction
+                </div>
+                <div
+                  className={`font-bold text-sm ${stats.marketState?.includes("UP") || stats.marketState?.includes("BREAKOUT_UP") ? "text-green-400" : stats.marketState?.includes("DOWN") || stats.marketState?.includes("BREAKOUT_DOWN") ? "text-red-400" : "text-yellow-400"}`}
+                >
+                  {MARKET_STATE_LABELS[stats.marketState]?.text || "Range"}
                 </div>
               </div>
             </div>

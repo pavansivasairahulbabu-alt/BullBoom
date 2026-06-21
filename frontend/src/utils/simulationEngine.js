@@ -1,4 +1,3 @@
-
 // Market States
 const MARKET_STATES = {
   TREND_UP: "TREND_UP",
@@ -9,7 +8,7 @@ const MARKET_STATES = {
   BREAKOUT_DOWN: "BREAKOUT_DOWN",
 };
 
-// Market Phases (from requirement 5
+// Market Phases (from requirement 5)
 const MARKET_PHASES = [
   MARKET_STATES.RANGE,
   MARKET_STATES.TREND_UP,
@@ -23,7 +22,7 @@ const MARKET_PHASES = [
 const SYMBOL_CONFIG = {
   NIFTY: {
     dailyRangeMin: 0.008, // 0.8%
-    dailyRangeMax: 0.015, //1.5%
+    dailyRangeMax: 0.015, // 1.5%
     supportMin: 80, // points
     supportMax: 150, // points
     resistanceMin: 80, // points
@@ -37,8 +36,8 @@ const SYMBOL_CONFIG = {
     wickSize: 10,
   },
   BANKNIFTY: {
-    dailyRangeMin: 0.015, //1.5%
-    dailyRangeMax: 0.025, //2.5%
+    dailyRangeMin: 0.015, // 1.5%
+    dailyRangeMax: 0.025, // 2.5%
     supportMin: 200,
     supportMax: 400,
     resistanceMin: 200,
@@ -206,13 +205,140 @@ class SimulationEngine {
   generateNextCandle() {
     if (!this.candles.length) return null;
     const lastCandle = this.candles[this.candles.length - 1];
-    const newCandle = this._generateSingleCandle(lastCandle.close, lastCandle.time + 60 * this.timeframe);
+    const newCandle = this._generateSingleCandle(
+      lastCandle.close,
+      lastCandle.time + 60 * this.timeframe,
+    );
     this.candles.push(newCandle);
     this._updateIndicators();
     this._updateSwingPoints();
     this._detectPatterns();
     this._updateMarketPhase();
     return newCandle;
+  }
+
+  _generateSingleCandle(basePrice, time) {
+    let bias = this._getBias();
+
+    // Respect price limits
+    const distanceToMin = basePrice - this.minPrice;
+    const distanceToMax = this.maxPrice - basePrice;
+
+    // If near limits, increase reversal chance
+    if (distanceToMin < this.symbolConfig.volatility * 2) bias = 1;
+    if (distanceToMax < this.symbolConfig.volatility * 2) bias = -1;
+
+    // Calculate candle body size based on market phase
+    let volatility = this.symbolConfig.volatility;
+    let bodySize = (Math.random() - 0.5) * volatility;
+    if (this.marketState.includes("TREND_UP"))
+      bodySize *= this.symbolConfig.trendStrength;
+    if (this.marketState.includes("TREND_DOWN"))
+      bodySize *= this.symbolConfig.trendStrength;
+    if (this.marketState.includes("BREAKOUT"))
+      bodySize *= this.symbolConfig.breakoutStrength;
+    if (this.marketState.includes("CONSOLIDATION")) bodySize *= 0.5;
+
+    let wickSize = Math.random() * this.symbolConfig.wickSize;
+
+    const open = basePrice;
+    let close = open + bias * bodySize;
+
+    // Apply phase-based behavior
+    if (this.marketState === MARKET_STATES.TREND_UP && this.ema200) {
+      if (close > this.ema200) {
+        bodySize *= 1.2;
+        close = open + bias * bodySize;
+      }
+    }
+    if (this.marketState === MARKET_STATES.TREND_DOWN && this.ema200) {
+      if (close < this.ema200) {
+        bodySize *= 1.2;
+        close = open + bias * bodySize;
+      }
+    }
+
+    // Enforce bounds
+    if (close > this.maxPrice) close = this.maxPrice - Math.random() * 5;
+    if (close < this.minPrice) close = this.minPrice + Math.random() * 5;
+
+    let high = Math.max(open, close) + wickSize;
+    let low = Math.min(open, close) - wickSize;
+
+    if (high > this.maxPrice) high = this.maxPrice;
+    if (low < this.minPrice) low = this.minPrice;
+
+    // Breakout logic
+    if (this.touchesAtResistance >= 3 && Math.random() < 0.3) {
+      this.marketState = MARKET_STATES.BREAKOUT_UP;
+      this.touchesAtResistance = 0;
+      // Reset breakout after some time
+      setTimeout(() => {
+        if (this.marketState === MARKET_STATES.BREAKOUT_UP) {
+          this.marketState = MARKET_STATES.TREND_UP;
+        }
+      }, 3000);
+    }
+    if (this.touchesAtSupport >= 3 && Math.random() < 0.3) {
+      this.marketState = MARKET_STATES.BREAKOUT_DOWN;
+      this.touchesAtSupport = 0;
+      setTimeout(() => {
+        if (this.marketState === MARKET_STATES.BREAKOUT_DOWN) {
+          this.marketState = MARKET_STATES.TREND_DOWN;
+        }
+      }, 3000);
+    }
+
+    return {
+      time,
+      open: parseFloat(open.toFixed(2)),
+      high: parseFloat(high.toFixed(2)),
+      low: parseFloat(low.toFixed(2)),
+      close: parseFloat(close.toFixed(2)),
+    };
+  }
+
+  _getBias() {
+    if (this.activePattern === "Double Bottom") return 1;
+    if (this.activePattern === "Double Top") return -1;
+    if (this.activePattern === "Bull Flag") return 1;
+    if (this.activePattern === "Bear Flag") return -1;
+    if (this.activePattern === "Head & Shoulders") return -1;
+    if (this.activePattern === "Triangle") return Math.random() > 0.5 ? 1 : -1;
+
+    if (this.marketState === MARKET_STATES.TREND_UP) return 1;
+    if (this.marketState === MARKET_STATES.TREND_DOWN) return -1;
+
+    // Adjust bias for support/resistance
+    const currentPrice =
+      this.candles[this.candles.length - 1]?.close || this.basePrice;
+    const distanceToSupport = this.support
+      ? currentPrice - this.support
+      : Infinity;
+    const distanceToResistance = this.resistance
+      ? this.resistance - currentPrice
+      : Infinity;
+
+    if (distanceToSupport < 30) {
+      if (distanceToSupport < 10) {
+        this.touchesAtSupport++;
+      }
+      return Math.random() < 0.8 ? 1 : -1;
+    }
+    if (distanceToResistance < 30) {
+      if (distanceToResistance < 10) {
+        this.touchesAtResistance++;
+      }
+      return Math.random() < 0.8 ? -1 : 1;
+    }
+
+    if (this.ema200) {
+      const aboveEma = currentPrice > this.ema200;
+      if (aboveEma && Math.random() < 0.65) return 1;
+      if (!aboveEma && Math.random() < 0.65) return -1;
+    }
+
+    return Math.random() > 0.5 ? 1 : -1;
   }
 
   _updateIndicators() {
@@ -233,25 +359,6 @@ class SimulationEngine {
     return parseFloat(ema.toFixed(2));
   }
 
-  calculateEmaLineData() {
-    if (this.candles.length < 200) return [];
-    const data = [];
-    const k = 2 / (200 + 1);
-    let ema = this.candles[0].close;
-
-    for (let i = 0; i < this.candles.length; i++) {
-      ema = this.candles[i].close * k + ema * (1 - k);
-      if (i >= 199) {
-        data.push({
-          time: this.candles[i].time,
-          value: parseFloat(ema.toFixed(2)),
-        });
-      }
-    }
-    return data;
-  }
-
-  // Calculate Support & Resistance from Swing Highs & Lows (Requirement 2)
   calculateSupportResistance() {
     if (this.candles.length < 20) return { support: null, resistance: null };
 
@@ -260,12 +367,12 @@ class SimulationEngine {
 
     if (this.swingLows.length > 0) {
       const recentLows = this.swingLows.slice(-5);
-      support = Math.min(...recentLows.map(l => l.price));
+      support = Math.min(...recentLows.map((l) => l.price));
     }
 
     if (this.swingHighs.length > 0) {
       const recentHighs = this.swingHighs.slice(-5);
-      resistance = Math.max(...recentHighs.map(h => h.price));
+      resistance = Math.max(...recentHighs.map((h) => h.price));
     }
 
     return {
@@ -291,7 +398,7 @@ class SimulationEngine {
     ) {
       this.swingHighs.push({
         price: recent[i].high,
-        time: recent[i].time
+        time: recent[i].time,
       });
     }
     // Only keep last 20
@@ -306,7 +413,7 @@ class SimulationEngine {
     ) {
       this.swingLows.push({
         price: recent[i].low,
-        time: recent[i].time
+        time: recent[i].time,
       });
     }
     if (this.swingLows.length > 20) this.swingLows.shift();
@@ -346,86 +453,6 @@ class SimulationEngine {
     }
   }
 
-  _generateSingleCandle(basePrice, time) {
-    let bias = this._getBias();
-
-    // Respect price limits
-    const distanceToMin = basePrice - this.minPrice;
-    const distanceToMax = this.maxPrice - basePrice;
-
-    // If near limits, increase reversal chance
-    if (distanceToMin < this.symbolConfig.volatility * 2) bias = 1;
-    if (distanceToMax < this.symbolConfig.volatility * 2) bias = -1;
-
-    // Calculate candle body size based on market phase
-    let volatility = this.symbolConfig.volatility;
-    let bodySize = (Math.random() - 0.5) * volatility;
-    if (this.marketState.includes("TREND_UP")) bodySize *= this.symbolConfig.trendStrength;
-    if (this.marketState.includes("TREND_DOWN")) bodySize *= this.symbolConfig.trendStrength;
-    if (this.marketState.includes("BREAKOUT")) bodySize *= this.symbolConfig.breakoutStrength;
-    if (this.marketState.includes("CONSOLIDATION")) bodySize *= 0.5;
-
-    let wickSize = Math.random() * this.symbolConfig.wickSize;
-
-    const open = basePrice;
-    let close = open + bias * bodySize;
-
-    // Apply phase-based behavior
-    if (this.marketState === MARKET_STATES.TREND_UP && this.ema200) {
-      if (close > this.ema200) {
-        bodySize *= 1.2;
-        close = open + bias * bodySize;
-      }
-    }
-    if (this.marketState === MARKET_STATES.TREND_DOWN && this.ema200) {
-      if (close < this.ema200) {
-        bodySize *= 1.2;
-        close = open + bias * bodySize;
-      }
-    }
-
-    // Enforce bounds
-    if (close > this.maxPrice) close = this.maxPrice - Math.random() * 5;
-    if (close < this.minPrice) close = this.minPrice + Math.random() * 5;
-
-    let high = Math.max(open, close) + wickSize;
-    let low = Math.min(open, close) - wickSize;
-
-    if (high > this.maxPrice) high = this.maxPrice;
-    if (low < this.minPrice) low = this.minPrice;
-
-    return {
-      time,
-      open: parseFloat(open.toFixed(2)),
-      high: parseFloat(high.toFixed(2)),
-      low: parseFloat(low.toFixed(2)),
-      close: parseFloat(close.toFixed(2)),
-    };
-  }
-
-  _getBias() {
-    if (this.activePattern === "Double Bottom") return 1;
-    if (this.activePattern === "Double Top") return -1;
-    if (this.activePattern === "Bull Flag") return 1;
-    if (this.activePattern === "Bear Flag") return -1;
-    if (this.activePattern === "Head & Shoulders") return -1;
-    if (this.activePattern === "Triangle") return Math.random() > 0.5 ? 1 : -1;
-
-    if (this.marketState === MARKET_STATES.TREND_UP) return 1;
-    if (this.marketState === MARKET_STATES.TREND_DOWN) return -1;
-
-    if (this.ema200) {
-      const aboveEma = this.candles[this.candles.length -1].close > this.ema200;
-      if (aboveEma && Math.random() < 0.65) return 1;
-      if (!aboveEma && Math.random() < 0.65) return -1;
-    }
-
-    if (this.support && this.candles[this.candles.length - 1].close < this.support + 20) return 1;
-    if (this.resistance && this.candles[this.candles.length - 1].close > this.resistance - 20) return -1;
-
-    return Math.random() > 0.5 ? 1 : -1;
-  }
-
   _detectPatterns() {
     if (this.candles.length < 50) return;
     this.activePattern = null;
@@ -438,12 +465,19 @@ class SimulationEngine {
     const impulseStart = recent.slice(-30, -15);
     const flag = recent.slice(-15);
 
-    const impulseUp = impulseStart.length > 0 && impulseStart[impulseStart.length-1].close > impulseStart[0].close *1.01;
-    const flagDown = flag.length >0 && flag[flag.length - 1].close < flag[0].close && flag[flag.length -1].close > impulseStart[0].close;
+    const impulseUp =
+      impulseStart.length > 0 &&
+      impulseStart[impulseStart.length - 1].close >
+        impulseStart[0].close * 1.01;
+    const flagDown =
+      flag.length > 0 &&
+      flag[flag.length - 1].close < flag[0].close &&
+      flag[flag.length - 1].close > impulseStart[0].close;
 
     if (impulseUp && flagDown) {
       confidence += 40;
-      if (this.ema200 && flag.every(c => c.close > this.ema200)) confidence +=20;
+      if (this.ema200 && flag.every((c) => c.close > this.ema200))
+        confidence += 20;
       if (this.support && this.resistance) confidence += 20;
       this.activePattern = "Bull Flag";
       this.patternConfidence = confidence;
@@ -451,38 +485,48 @@ class SimulationEngine {
     }
 
     // Bear Flag
-    const impulseDown = impulseStart.length>0 && impulseStart[impulseStart.length-1].close < impulseStart[0].close *0.99;
-    const flagUp = flag.length>0 && flag[flag.length-1].close > flag[0].close && flag[flag.length -1].close < impulseStart[0].close;
+    const impulseDown =
+      impulseStart.length > 0 &&
+      impulseStart[impulseStart.length - 1].close <
+        impulseStart[0].close * 0.99;
+    const flagUp =
+      flag.length > 0 &&
+      flag[flag.length - 1].close > flag[0].close &&
+      flag[flag.length - 1].close < impulseStart[0].close;
     if (impulseDown && flagUp) {
       confidence += 40;
-      if (this.ema200 && flag.every(c => c.close < this.ema200)) confidence += 20;
-      if (this.support && this.resistance) confidence +=20;
+      if (this.ema200 && flag.every((c) => c.close < this.ema200))
+        confidence += 20;
+      if (this.support && this.resistance) confidence += 20;
       this.activePattern = "Bear Flag";
       this.patternConfidence = confidence;
       return;
     }
 
     // Double Bottom
-    const lows = recent.map(c => c.low);
+    const lows = recent.map((c) => c.low);
     const firstLow = Math.min(...lows.slice(0, 25));
     const secondLow = Math.min(...lows.slice(25));
     if (Math.abs(firstLow - secondLow) < 50) {
       confidence += 50;
-      if (recent[recent.length -1].close > secondLow *1.005) confidence +=20;
-      if (this.ema200 && recent[recent.length-1].close > this.ema200) confidence += 20;
+      if (recent[recent.length - 1].close > secondLow * 1.005) confidence += 20;
+      if (this.ema200 && recent[recent.length - 1].close > this.ema200)
+        confidence += 20;
       this.activePattern = "Double Bottom";
       this.patternConfidence = confidence;
       return;
     }
 
     // Double Top
-    const highs = recent.map(c => c.high);
-    const firstHigh = Math.max(...highs.slice(0,25));
+    const highs = recent.map((c) => c.high);
+    const firstHigh = Math.max(...highs.slice(0, 25));
     const secondHigh = Math.max(...highs.slice(25));
     if (Math.abs(firstHigh - secondHigh) < 50) {
-      confidence +=50;
-      if (recent[recent.length -1].close < secondHigh *0.995) confidence +=20;
-      if (this.ema200 && recent[recent.length -1].close < this.ema200) confidence += 20;
+      confidence += 50;
+      if (recent[recent.length - 1].close < secondHigh * 0.995)
+        confidence += 20;
+      if (this.ema200 && recent[recent.length - 1].close < this.ema200)
+        confidence += 20;
       this.activePattern = "Double Top";
       this.patternConfidence = confidence;
       return;
@@ -493,8 +537,12 @@ class SimulationEngine {
       const left = Math.max(...highs.slice(0, 15));
       const head = Math.max(...highs.slice(15, 30));
       const right = Math.max(...highs.slice(30));
-      if (head > left + 20 && head > right + 20 && Math.abs(left - right) < 30) {
-        confidence +=60;
+      if (
+        head > left + 20 &&
+        head > right + 20 &&
+        Math.abs(left - right) < 30
+      ) {
+        confidence += 60;
         this.activePattern = "Head & Shoulders";
         this.patternConfidence = confidence;
         return;
@@ -502,11 +550,33 @@ class SimulationEngine {
     }
   }
 
+  calculateEmaLineData() {
+    if (this.candles.length < 200) return [];
+    const data = [];
+    const k = 2 / (200 + 1);
+    let ema = this.candles[0].close;
+
+    for (let i = 0; i < this.candles.length; i++) {
+      ema = this.candles[i].close * k + ema * (1 - k);
+      if (i >= 199) {
+        data.push({
+          time: this.candles[i].time,
+          value: parseFloat(ema.toFixed(2)),
+        });
+      }
+    }
+    return data;
+  }
+
   getStats() {
-    const currentClose = this.candles[this.candles.length - 1]?.close || this.basePrice;
-    const previousClose = this.candles.length >1 ? this.candles[this.candles.length - 2].close : this.basePrice;
+    const currentClose =
+      this.candles[this.candles.length - 1]?.close || this.basePrice;
+    const previousClose =
+      this.candles.length > 1
+        ? this.candles[this.candles.length - 2].close
+        : this.basePrice;
     const change = currentClose - previousClose;
-    const changePercent = (change / previousClose) *100;
+    const changePercent = (change / previousClose) * 100;
 
     return {
       currentPrice: currentClose,
@@ -517,20 +587,24 @@ class SimulationEngine {
       support: this.support,
       resistance: this.resistance,
       activePattern: this.activePattern,
-      patternConfidence: Math.min(this.patternConfidence,100),
+      patternConfidence: Math.min(this.patternConfidence, 100),
       marketState: this.marketState,
+      touchesAtSupport: this.touchesAtSupport,
+      touchesAtResistance: this.touchesAtResistance,
     };
   }
 }
 
 export const simulationEngine = new SimulationEngine();
 
-export const generateInitialCandles = (count) => simulationEngine.generateInitialCandles(count);
+export const generateInitialCandles = (count) =>
+  simulationEngine.generateInitialCandles(count);
 export const generateNextCandle = () => simulationEngine.generateNextCandle();
-export const calculateEMA200 = (candles) => simulationEngine.calculateEMA200(candles);
-export const calculateSupportResistance = (candles) => simulationEngine.calculateSupportResistance(candles);
+export const calculateEMA200 = (candles) =>
+  simulationEngine.calculateEMA200(candles);
+export const calculateSupportResistance = () =>
+  simulationEngine.calculateSupportResistance();
 export const getStats = () => simulationEngine.getStats();
 export const resetEngine = () => simulationEngine.reset();
 export const setTimeframe = (minutes) => simulationEngine.setTimeframe(minutes);
 export const setSymbol = (symbol) => simulationEngine.setSymbol(symbol);
-
