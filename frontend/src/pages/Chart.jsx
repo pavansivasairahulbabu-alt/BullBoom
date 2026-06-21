@@ -109,7 +109,7 @@ export default function Chart() {
         />
 
         <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} timeframe={timeframe} />
+          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} timeframe={timeframe} symbol={symbol} />
           <ChartLegend />
           <TradingTipsPanel simData={simData} />
         </div>

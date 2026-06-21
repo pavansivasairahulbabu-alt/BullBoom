@@ -1,4 +1,4 @@
-const BASE_PRICE = 22500;
+
 
 // Market States
 const MARKET_STATES = {
@@ -19,7 +19,12 @@ class SimulationEngine {
     this.ema200 = null;
     this.touchesAtResistance = 0;
     this.touchesAtSupport = 0;
+    this.touchesAtSupport = 0;
     this.timeframe = 1; // Default to 1 minute
+    this.symbol = "NIFTY";
+    this.basePrice = 23500;
+    this.minPrice = 23000;
+    this.maxPrice = 24000;
   }
 
   reset() {
@@ -37,9 +42,31 @@ class SimulationEngine {
     this.timeframe = minutes;
   }
 
+  setSymbol(symbol) {
+    const sym = (symbol || "").toUpperCase();
+    this.symbol = sym;
+    if (sym === "NIFTY") {
+      this.basePrice = 23500;
+      this.minPrice = 23000;
+      this.maxPrice = 24000;
+    } else if (sym === "BANKNIFTY") {
+      this.basePrice = 50000;
+      this.minPrice = 48000;
+      this.maxPrice = 52000;
+    } else if (sym === "SENSEX") {
+      this.basePrice = 74500;
+      this.minPrice = 74000;
+      this.maxPrice = 75000;
+    } else {
+      this.basePrice = 22500;
+      this.minPrice = 0;
+      this.maxPrice = Infinity;
+    }
+  }
+
   generateInitialCandles(count = 200) {
     this.reset();
-    let currentPrice = BASE_PRICE;
+    let currentPrice = this.basePrice;
     let time = Math.floor(Date.now() / 1000) - count * 60 * this.timeframe;
 
     for (let i = 0; i < count; i++) {
@@ -66,6 +93,10 @@ class SimulationEngine {
 
   _generateSingleCandle(basePrice, time) {
     let bias = this._getBias();
+
+    // Bound restrictions
+    if (basePrice < this.minPrice + 50) bias = 1; // Force bounce up
+    if (basePrice > this.maxPrice - 50) bias = -1; // Force bounce down
 
     // Adjust bias for support/resistance
     const distanceToSupport = this.support ? basePrice - this.support : Infinity;
@@ -109,9 +140,18 @@ class SimulationEngine {
     const wickSize = 2 + Math.random() * 8;
 
     const open = basePrice;
-    const close = open + bias * bodySize;
-    const high = Math.max(open, close) + wickSize;
-    const low = Math.min(open, close) - wickSize;
+    let close = open + bias * bodySize;
+
+    // Enforce strict bounds
+    if (close > this.maxPrice) close = this.maxPrice - Math.random() * 5;
+    if (close < this.minPrice) close = this.minPrice + Math.random() * 5;
+
+    let high = Math.max(open, close) + wickSize;
+    let low = Math.min(open, close) - wickSize;
+    
+    // Cap wicks as well
+    if (high > this.maxPrice) high = this.maxPrice;
+    if (low < this.minPrice) low = this.minPrice;
 
     return {
       time,
@@ -235,7 +275,7 @@ class SimulationEngine {
 
   getStats() {
     return {
-      currentPrice: this.candles[this.candles.length - 1]?.close || BASE_PRICE,
+      currentPrice: this.candles[this.candles.length - 1]?.close || this.basePrice,
       ema200: this.ema200,
       ema200Data: this.calculateEmaLineData(),
       support: this.support,
@@ -273,3 +313,4 @@ export const calculateSupportResistance = (candles) => simulationEngine.calculat
 export const getStats = () => simulationEngine.getStats();
 export const resetEngine = () => simulationEngine.reset();
 export const setTimeframe = (minutes) => simulationEngine.setTimeframe(minutes);
+export const setSymbol = (symbol) => simulationEngine.setSymbol(symbol);
