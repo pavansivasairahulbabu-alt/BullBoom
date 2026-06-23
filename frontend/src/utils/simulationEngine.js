@@ -129,6 +129,7 @@ class SimulationEngine {
     this.basePrice = 23500;
     this.minPrice = 23000;
     this.maxPrice = 25000;
+    this.lastTickPrice = 23500;
     this.symbolConfig = SYMBOL_CONFIG.NIFTY;
     this.swingHighs = [];
     this.swingLows = [];
@@ -186,35 +187,79 @@ class SimulationEngine {
   generateInitialCandles(count = 200) {
     this.reset();
     let currentPrice = this.basePrice;
-    let time = Math.floor(Date.now() / 1000) - count * 60 * this.timeframe;
+    
+    const now = Math.floor(Date.now() / 1000);
+    const timeframeSeconds = Number(this.timeframe) * 60;
+    let currentCandleTime = now - (now % timeframeSeconds);
+    
+    let time = currentCandleTime - (count - 1) * timeframeSeconds;
 
     for (let i = 0; i < count; i++) {
       const candle = this._generateSingleCandle(currentPrice, time);
       this.candles.push(candle);
       currentPrice = candle.close;
-      time += 60 * this.timeframe;
+      time += timeframeSeconds;
       this._updateIndicators();
       this._updateSwingPoints();
       this._detectPatterns();
       this._updateMarketPhase();
     }
 
+    this.lastTickPrice = currentPrice;
+
     return [...this.candles];
   }
 
   generateNextCandle() {
     if (!this.candles.length) return null;
-    const lastCandle = this.candles[this.candles.length - 1];
-    const newCandle = this._generateSingleCandle(
-      lastCandle.close,
-      lastCandle.time + 60 * this.timeframe,
-    );
-    this.candles.push(newCandle);
-    this._updateIndicators();
-    this._updateSwingPoints();
-    this._detectPatterns();
-    this._updateMarketPhase();
-    return newCandle;
+    let lastCandle = this.candles[this.candles.length - 1];
+    
+    const now = Math.floor(Date.now() / 1000);
+    const timeframeSeconds = Number(this.timeframe) * 60;
+    
+    // Ensure we only cross to a new candle when the current real time has actually passed the last candle's boundary
+    // by at least timeframeSeconds. We align it to the grid.
+    const currentCandleTime = now - (now % timeframeSeconds);
+
+    let bias = this._getBias();
+    if (this.lastTickPrice < this.minPrice + 50) bias = 1;
+    if (this.lastTickPrice > this.maxPrice - 50) bias = -1;
+
+    let multiplier = Math.max(1, Math.sqrt(this.timeframe));
+    let move = (Math.random() - 0.5) * 10 * multiplier;
+    let nextPrice = this.lastTickPrice + move + bias * 2 * multiplier;
+    
+    if (nextPrice > this.maxPrice) nextPrice = this.maxPrice - Math.random() * 5;
+    if (nextPrice < this.minPrice) nextPrice = this.minPrice + Math.random() * 5;
+    nextPrice = parseFloat(nextPrice.toFixed(2));
+    this.lastTickPrice = nextPrice;
+
+    if (currentCandleTime > lastCandle.time) {
+      // New candle
+      const newCandle = {
+        time: currentCandleTime,
+        open: lastCandle.close,
+        high: Math.max(lastCandle.close, nextPrice),
+        low: Math.min(lastCandle.close, nextPrice),
+        close: nextPrice
+      };
+      this.candles.push(newCandle);
+      this._updateIndicators();
+      this._updateSwingPoints();
+      this._detectPatterns();
+      this._updateMarketPhase();
+      return newCandle;
+    } else {
+      // Update active candle
+      lastCandle.high = Math.max(lastCandle.high, nextPrice);
+      lastCandle.low = Math.min(lastCandle.low, nextPrice);
+      lastCandle.close = nextPrice;
+      this._updateIndicators();
+      this._updateSwingPoints();
+      this._detectPatterns();
+      this._updateMarketPhase();
+      return { ...lastCandle };
+    }
   }
 
   _generateSingleCandle(basePrice, time) {
@@ -239,7 +284,25 @@ class SimulationEngine {
       bodySize *= this.symbolConfig.breakoutStrength;
     if (this.marketState.includes("CONSOLIDATION")) bodySize *= 0.5;
 
+<<<<<<< HEAD
     let wickSize = Math.random() * this.symbolConfig.wickSize;
+=======
+    // Body size and trend adjustments
+    let multiplier = Math.max(1, Math.sqrt(this.timeframe));
+    let bodySize = (5 + Math.random() * 20) * multiplier;
+    if (this.marketState === MARKET_STATES.BREAKOUT_UP) {
+      bias = 1;
+      bodySize *= 1.5 + Math.random();
+      setTimeout(() => (this.marketState = MARKET_STATES.TREND_UP), 3000);
+    }
+    if (this.marketState === MARKET_STATES.BREAKOUT_DOWN) {
+      bias = -1;
+      bodySize *= 1.5 + Math.random();
+      setTimeout(() => (this.marketState = MARKET_STATES.TREND_DOWN), 3000);
+    }
+
+    const wickSize = (2 + Math.random() * 8) * multiplier;
+>>>>>>> 8a358d5 (feat: implement real-time continuous candle update logic)
 
     const open = basePrice;
     let close = open + bias * bodySize;

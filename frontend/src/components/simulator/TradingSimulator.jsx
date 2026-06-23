@@ -280,7 +280,7 @@ export default function TradingSimulator({
         });
         if (stats.activePattern) prevPatternRef.current = stats.activePattern;
       }
-    }, 1000);
+    }, 300);
 
     const handleResize = () => {
       chart.applyOptions({ width: chartContainerRef.current.clientWidth });
