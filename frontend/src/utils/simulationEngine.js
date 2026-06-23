@@ -284,25 +284,7 @@ class SimulationEngine {
       bodySize *= this.symbolConfig.breakoutStrength;
     if (this.marketState.includes("CONSOLIDATION")) bodySize *= 0.5;
 
-<<<<<<< HEAD
     let wickSize = Math.random() * this.symbolConfig.wickSize;
-=======
-    // Body size and trend adjustments
-    let multiplier = Math.max(1, Math.sqrt(this.timeframe));
-    let bodySize = (5 + Math.random() * 20) * multiplier;
-    if (this.marketState === MARKET_STATES.BREAKOUT_UP) {
-      bias = 1;
-      bodySize *= 1.5 + Math.random();
-      setTimeout(() => (this.marketState = MARKET_STATES.TREND_UP), 3000);
-    }
-    if (this.marketState === MARKET_STATES.BREAKOUT_DOWN) {
-      bias = -1;
-      bodySize *= 1.5 + Math.random();
-      setTimeout(() => (this.marketState = MARKET_STATES.TREND_DOWN), 3000);
-    }
-
-    const wickSize = (2 + Math.random() * 8) * multiplier;
->>>>>>> 8a358d5 (feat: implement real-time continuous candle update logic)
 
     const open = basePrice;
     let close = open + bias * bodySize;

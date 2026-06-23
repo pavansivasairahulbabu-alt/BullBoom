@@ -5,6 +5,8 @@ export default function ChartToolbar({
   onReset,
   timeframe = 1,
   onTimeframeChange,
+  activeTool = 'cursor',
+  onToolChange,
 }) {
   return (
     <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
@@ -35,6 +37,23 @@ export default function ChartToolbar({
           <span className="text-[#32CD32] font-bold">Simulation Mode</span>
         </div>
       </div>
+      
+      <div className="flex items-center gap-2 border-l border-white/10 pl-4">
+        {['cursor', 'trendline', 'horizontal', 'vertical', 'rectangle'].map(tool => (
+          <button
+            key={tool}
+            onClick={() => onToolChange(tool)}
+            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              activeTool === tool 
+                ? 'bg-[#32CD32] text-black' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {tool.charAt(0).toUpperCase() + tool.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <button
         onClick={onReset}
         className="px-4 py-2 rounded-xl bg-[#32CD32]/10 border border-[#32CD32]/30 text-[#32CD32] font-medium hover:bg-[#32CD32]/20 transition-all hover:shadow-[0_0_20px_rgba(50,205,50,0.1)] active:scale-95"

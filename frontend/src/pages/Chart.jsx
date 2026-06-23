@@ -21,6 +21,7 @@ export default function Chart() {
   const { symbol } = useParams();
   const navigate = useNavigate();
   const [timeframe, setTimeframe] = useState(1);
+  const [activeTool, setActiveTool] = useState('cursor');
   const [simData, setSimData] = useState({
     currentPrice: 22500,
     ema200: 22500,
@@ -98,6 +99,8 @@ export default function Chart() {
           onReset={handleReset} 
           timeframe={timeframe}
           onTimeframeChange={handleTimeframeChange}
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
         />
 
         <SimulationStats
@@ -108,8 +111,14 @@ export default function Chart() {
           activePattern={simData.activePattern}
         />
 
-        <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-          <TradingSimulator key={resetKey} onStatsUpdate={handleStatsUpdate} timeframe={timeframe} symbol={symbol} />
+        <div className="bg-[#0B1220] rounded-2xl border border-white/10 overflow-hidden shadow-2xl h-[600px] relative">
+          <TradingSimulator 
+            key={resetKey} 
+            onStatsUpdate={handleStatsUpdate} 
+            timeframe={timeframe} 
+            symbol={symbol} 
+            activeTool={activeTool} 
+          />
           <ChartLegend />
           <TradingTipsPanel simData={simData} />
         </div>

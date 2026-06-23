@@ -12,6 +12,7 @@ import {
   setTimeframe,
 } from "../../utils/simulationEngine";
 import { marketStore } from "../../services/marketStore";
+import DrawingOverlay from "./drawing/DrawingOverlay";
 
 const MARKET_STATE_LABELS = {
   TREND_UP: { text: "Uptrend", color: "#32CD32" },
@@ -29,13 +30,16 @@ export default function TradingSimulator({
   onStatsUpdate,
   timeframe = 1,
   symbol = "NIFTY",
+  activeTool = "cursor",
 }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
+  const seriesRef = useRef(null);
   const intervalRef = useRef(null);
   const prevPatternRef = useRef(null);
   const initialCandlesRef = useRef([]);
 
+  const [chartReady, setChartReady] = useState(false);
   const [selectedCandle, setSelectedCandle] = useState(null);
   const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
   const [hoverCandle, setHoverCandle] = useState(null);
@@ -112,6 +116,8 @@ export default function TradingSimulator({
     let emaLine = null;
 
     chartRef.current = { chart, candlestickSeries };
+    seriesRef.current = candlestickSeries;
+    setChartReady(true);
 
     // Initialize candles
     const initialCandles = generateInitialCandles(200);
@@ -359,7 +365,17 @@ export default function TradingSimulator({
     <div
       ref={chartContainerRef}
       className="relative w-full h-[500px] rounded-xl border border-white/10 overflow-hidden"
+      style={{ position: 'relative' }} // ensure positioning works for children
     >
+      {chartReady && chartRef.current?.chart && seriesRef.current && (
+        <DrawingOverlay
+          chart={chartRef.current.chart}
+          series={seriesRef.current}
+          activeTool={activeTool}
+          chartContainer={chartContainerRef.current}
+        />
+      )}
+
       {/* Hover Tooltip */}
       <AnimatePresence>
         {hoverCandle && !selectedCandle && (
