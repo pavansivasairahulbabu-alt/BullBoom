@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -8,14 +8,7 @@ import ChartToolbar from "../components/simulator/ChartToolbar";
 import SimulationStats from "../components/simulator/SimulationStats";
 import TradingTipsPanel from "../components/simulator/TradingTipsPanel";
 import ChartLegend from "../components/simulator/ChartLegend";
-
-const PATTERN_TOASTS = {
-  "Double Bottom": "📈 Double Bottom Detected - Bullish Reversal Pattern",
-  "Double Top": "📉 Double Top Detected - Bearish Reversal Pattern",
-  "Bull Flag": "🚀 Bull Flag Detected - Trend Continuation Pattern",
-  "Bear Flag": "🔻 Bear Flag Detected - Trend Continuation Pattern",
-  "Head & Shoulders": "⚠️ Head & Shoulders Detected - Bearish Reversal Pattern",
-};
+import DrawingToolbar from "../components/simulator/DrawingToolbar";
 
 export default function Chart() {
   const { symbol } = useParams();
@@ -31,32 +24,13 @@ export default function Chart() {
     marketState: "RANGE",
   });
   const [resetKey, setResetKey] = useState(0);
-  const prevPatternRef = useRef(null);
 
   const handleStatsUpdate = useCallback((stats) => {
     setSimData(stats);
   }, []);
 
-  useEffect(() => {
-    if (simData.activePattern && simData.activePattern !== prevPatternRef.current) {
-      prevPatternRef.current = simData.activePattern;
-      const message = PATTERN_TOASTS[simData.activePattern];
-      if (message) {
-        toast(message, {
-          duration: 5000,
-          style: {
-          backgroundColor: "#0B1220",
-          color: "white",
-          border: "1px solid #FFD700",
-          },
-        });
-      }
-    }
-  }, [simData.activePattern]);
-
   const handleReset = () => {
     setResetKey((prev) => prev + 1);
-    prevPatternRef.current = null;
   };
 
   const handleTimeframeChange = (newTimeframe) => {
@@ -99,8 +73,6 @@ export default function Chart() {
           onReset={handleReset} 
           timeframe={timeframe}
           onTimeframeChange={handleTimeframeChange}
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
         />
 
         <SimulationStats
@@ -111,16 +83,22 @@ export default function Chart() {
           activePattern={simData.activePattern}
         />
 
-        <div className="bg-[#0B1220] rounded-2xl border border-white/10 overflow-hidden shadow-2xl h-[600px] relative">
-          <TradingSimulator 
-            key={resetKey} 
-            onStatsUpdate={handleStatsUpdate} 
-            timeframe={timeframe} 
-            symbol={symbol} 
-            activeTool={activeTool} 
-          />
-          <ChartLegend />
-          <TradingTipsPanel simData={simData} />
+        <div className="relative">
+          <DrawingToolbar activeTool={activeTool} onToolChange={setActiveTool} />
+          <div className="bg-[#0B1220] rounded-2xl border border-white/10 overflow-hidden shadow-2xl h-[600px] relative">
+            <div className="relative h-[500px]">
+              <TradingSimulator
+                key={resetKey}
+                onStatsUpdate={handleStatsUpdate}
+                timeframe={timeframe}
+                symbol={symbol}
+                activeTool={activeTool}
+                currentPrice={simData.currentPrice}
+              />
+            </div>
+            <ChartLegend />
+            <TradingTipsPanel simData={simData} />
+          </div>
         </div>
       </div>
     </div>

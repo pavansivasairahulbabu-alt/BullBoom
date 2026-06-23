@@ -8,10 +8,9 @@
     "start": "cross-env NODE_ENV=production node server.js",
     "dev": "cross-env NODE_ENV=development nodemon server.js",
     "build": "cd ../frontend && npm install && npm run build",
-    "seed": "node scripts/seedEducation.js",
+    "seed": "node scripts/seedLearningData.js",
     "seedEducation": "node scripts/seedEducationData.js",
     "seedLearning": "node scripts/seedLearningData.js",
-    "seed": "node scripts/seedLearningData.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -39,7 +38,8 @@
     "mongoose": "^8.9.2",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

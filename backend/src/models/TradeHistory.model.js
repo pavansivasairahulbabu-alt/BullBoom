@@ -42,7 +42,33 @@ const tradeHistorySchema = new mongoose.Schema(
     positionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Position',
-      required: true,
+      required: false,
+    },
+    executionId: {
+      type: String,
+      trim: true,
+    },
+    positionType: {
+      type: String,
+      enum: ['LONG', 'SHORT'],
+    },
+    status: {
+      type: String,
+      enum: ['TARGET HIT', 'STOP LOSS HIT', 'CLOSED'],
+    },
+    source: {
+      type: String,
+      enum: ['ORDER', 'SIMULATOR_PLAN', 'AUTO_EXIT'],
+      default: 'ORDER',
+    },
+    riskRewardRatio: {
+      type: Number,
+    },
+    timeOpened: {
+      type: Date,
+    },
+    timeClosed: {
+      type: Date,
     },
     tradeDate: {
       type: Date,

@@ -6,7 +6,7 @@ import TradeHistory from '../models/TradeHistory.model.js';
 import { getMarketData } from './marketDataProvider.js';
 import { calculatePortfolio } from './portfolio.service.js';
 
-export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NSE', pattern, support, resistance, ema200 }) => {
+export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NSE', pattern, support, resistance, ema200, targetPrice, stopLossPrice }) => {
   const session = await User.startSession();
   session.startTransaction();
 
@@ -58,6 +58,8 @@ export const executeBuyOrder = async (userId, { symbol, quantity, exchange = 'NS
         quantity,
         entryPrice: currentPrice,
         currentPrice,
+        targetPrice,
+        stopLossPrice,
         orderId: order[0]._id,
         pattern,
         support,
@@ -195,7 +197,99 @@ export const executeSellOrder = async (userId, { positionId, quantity }) => {
   }
 };
 
+export const executeAutoExitOrder = async (
+  userId,
+  { symbol, exitPrice, exitReason, executionId, riskRewardRatio },
+) => {
+  const session = await User.startSession();
+  session.startTransaction();
+
+  try {
+    if (!symbol || !executionId || !['TARGET HIT', 'STOP LOSS HIT'].includes(exitReason)) {
+      throw new Error('Invalid auto-exit request');
+    }
+    const parsedExitPrice = Number(exitPrice);
+    if (!Number.isFinite(parsedExitPrice) || parsedExitPrice <= 0) {
+      throw new Error('Invalid auto-exit price');
+    }
+
+    const existingTrade = await TradeHistory.findOne({ userId, executionId }).session(session);
+    if (existingTrade) {
+      await session.abortTransaction();
+      return { success: true, trade: existingTrade, alreadyExecuted: true };
+    }
+
+    const user = await User.findById(userId).session(session);
+    if (!user) throw new Error('User not found');
+
+    const position = await Position.findOne({
+      userId,
+      symbol: symbol.toUpperCase(),
+      orderType: 'BUY',
+      status: 'OPEN',
+    }).sort({ createdAt: 1 }).session(session);
+    if (!position) throw new Error(`No active BUY position found for ${symbol.toUpperCase()}`);
+
+    const quantity = position.quantity;
+    const currentValue = parsedExitPrice * quantity;
+    const pnl = (parsedExitPrice - position.entryPrice) * quantity;
+    const closedAt = new Date();
+
+    const [order] = await Order.create([{
+      userId,
+      symbol: position.symbol,
+      exchange: position.exchange,
+      orderType: 'SELL',
+      quantity,
+      price: parsedExitPrice,
+      status: 'EXECUTED',
+      executionType: 'AUTO_EXIT',
+      exitReason,
+      executionId,
+    }], { session });
+
+    position.status = 'CLOSED';
+    position.currentPrice = parsedExitPrice;
+    await position.save({ session });
+
+    const [trade] = await TradeHistory.create([{
+      userId,
+      executionId,
+      symbol: position.symbol,
+      exchange: position.exchange,
+      positionType: 'LONG',
+      quantity,
+      entryPrice: position.entryPrice,
+      exitPrice: parsedExitPrice,
+      profitLoss: pnl,
+      positionId: position._id,
+      status: exitReason,
+      source: 'AUTO_EXIT',
+      riskRewardRatio: Number(riskRewardRatio) || 0,
+      timeOpened: position.createdAt,
+      timeClosed: closedAt,
+      tradeDate: closedAt,
+      holdingDuration: closedAt.getTime() - position.createdAt.getTime(),
+    }], { session });
+
+    user.availableBalance += currentValue;
+    user.realizedPnL += pnl;
+    user.investedAmount = Math.max(0, user.investedAmount - position.entryPrice * quantity);
+    await user.save({ session });
+
+    await session.commitTransaction();
+    const portfolio = await calculatePortfolio(userId);
+    return { success: true, order, position, trade, profitLoss: pnl, portfolio };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
 export default {
   executeBuyOrder,
   executeSellOrder,
+  executeAutoExitOrder,
 };

@@ -37,6 +37,14 @@ const positionSchema = new mongoose.Schema(
       required: [true, 'Entry price is required'],
       min: [0, 'Entry price must be positive']
     },
+    targetPrice: {
+      type: Number,
+      min: [0, 'Target price must be positive']
+    },
+    stopLossPrice: {
+      type: Number,
+      min: [0, 'Stop loss price must be positive']
+    },
     currentPrice: {
       type: Number,
       required: [true, 'Current price is required'],

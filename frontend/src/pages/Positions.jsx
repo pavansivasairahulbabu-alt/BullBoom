@@ -36,11 +36,15 @@ export default function Positions() {
     orderType: 'BUY',
     quantity: '',
     entryPrice: '',
+    targetPrice: '',
+    stopLossPrice: '',
     currentPrice: ''
   });
   const [editForm, setEditForm] = useState({
     currentPrice: '',
     quantity: '',
+    targetPrice: '',
+    stopLossPrice: '',
     status: ''
   });
   const [sellForm, setSellForm] = useState({ quantity: 1, loading: false });
@@ -319,6 +323,8 @@ export default function Positions() {
                     <th className="pb-3 font-semibold">Type</th>
                     <th className="pb-3 font-semibold">Qty</th>
                     <th className="pb-3 font-semibold">Entry Price</th>
+                    <th className="pb-3 font-semibold">Target Price</th>
+                    <th className="pb-3 font-semibold">Stop Loss</th>
                     <th className="pb-3 font-semibold">Current Price</th>
                     <th className="pb-3 font-semibold">Invested</th>
                     <th className="pb-3 font-semibold">Current Value</th>
@@ -346,6 +352,8 @@ export default function Positions() {
                       </td>
                       <td className="py-4">{pos.quantity}</td>
                       <td className="py-4">₹{formatNumber(pos.entryPrice)}</td>
+                      <td className="py-4 text-[#32CD32]">{pos.targetPrice ? `₹${formatNumber(pos.targetPrice)}` : '-'}</td>
+                      <td className="py-4 text-red-400">{pos.stopLossPrice ? `₹${formatNumber(pos.stopLossPrice)}` : '-'}</td>
                       <td className="py-4">₹{formatNumber(pos.currentPrice)}</td>
                       <td className="py-4">₹{formatNumber(pos.investedAmount)}</td>
                       <td className="py-4">₹{formatNumber(pos.currentValue)}</td>
@@ -383,6 +391,8 @@ export default function Positions() {
                                 setEditForm({
                                   currentPrice: pos.currentPrice,
                                   quantity: pos.quantity,
+                                  targetPrice: pos.targetPrice || '',
+                                  stopLossPrice: pos.stopLossPrice || '',
                                   status: pos.status
                                 });
                                 setIsEditModalOpen(true);
@@ -498,6 +508,28 @@ export default function Positions() {
                 />
               </div>
               <div>
+                <label className="text-xs text-[#B8C0D4] mb-1 block">Target Price (Optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={addForm.targetPrice}
+                  onChange={(e) => setAddForm({ ...addForm, targetPrice: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#B8C0D4] mb-1 block">Stop Loss (Optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={addForm.stopLossPrice}
+                  onChange={(e) => setAddForm({ ...addForm, stopLossPrice: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                />
+              </div>
+              <div>
                 <label className="text-xs text-[#B8C0D4] mb-1 block">Current Price (Optional)</label>
                 <input
                   type="number"
@@ -564,6 +596,14 @@ export default function Positions() {
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Entry Price</span>
                 <span className="font-semibold">₹{formatNumber(selectedPosition.entryPrice)}</span>
+              </div>
+              <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
+                <span className="text-[#B8C0D4]">Target Price</span>
+                <span className="font-semibold text-[#32CD32]">{selectedPosition.targetPrice ? `₹${formatNumber(selectedPosition.targetPrice)}` : '-'}</span>
+              </div>
+              <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
+                <span className="text-[#B8C0D4]">Stop Loss</span>
+                <span className="font-semibold text-red-400">{selectedPosition.stopLossPrice ? `₹${formatNumber(selectedPosition.stopLossPrice)}` : '-'}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Current Price</span>
@@ -634,6 +674,28 @@ export default function Positions() {
                   step="0.01"
                   value={editForm.currentPrice}
                   onChange={(e) => setEditForm({ ...editForm, currentPrice: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#B8C0D4] mb-1 block">Target Price (Optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editForm.targetPrice}
+                  onChange={(e) => setEditForm({ ...editForm, targetPrice: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#B8C0D4] mb-1 block">Stop Loss (Optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editForm.stopLossPrice}
+                  onChange={(e) => setEditForm({ ...editForm, stopLossPrice: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
                 />
               </div>

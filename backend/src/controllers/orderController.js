@@ -1,13 +1,13 @@
 
 import Order from '../models/Order.model.js';
 import TradeHistory from '../models/TradeHistory.model.js';
-import { executeBuyOrder, executeSellOrder } from '../services/trading.service.js';
+import { executeAutoExitOrder, executeBuyOrder, executeSellOrder } from '../services/trading.service.js';
 import { getMarketData } from '../services/marketDataProvider.js';
 
 // Buy Order Endpoint
 export const buyOrder = async (req, res) => {
   try {
-    const { symbol, quantity, exchange } = req.body;
+    const { symbol, quantity, exchange, targetPrice, stopLossPrice } = req.body;
 
     if (!symbol || !quantity) {
       return res.status(400).json({
@@ -20,6 +20,8 @@ export const buyOrder = async (req, res) => {
       symbol,
       quantity: Number(quantity),
       exchange,
+      targetPrice: targetPrice ? Number(targetPrice) : undefined,
+      stopLossPrice: stopLossPrice ? Number(stopLossPrice) : undefined,
     });
 
     res.status(201).json({
@@ -92,6 +94,80 @@ export const getTradeHistory = async (req, res) => {
   } catch (error) {
     console.error('Get Trade History Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Auto-exit an existing manual BUY position at a simulator target/stop price.
+export const autoExitOrder = async (req, res) => {
+  try {
+    const result = await executeAutoExitOrder(req.user._id, req.body);
+    return res.status(result.alreadyExecuted ? 200 : 201).json(result);
+  } catch (error) {
+    console.error('Auto Exit Order Error:', error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to auto-exit position',
+    });
+  }
+};
+
+// Save an automatically closed simulator trade plan without creating an order or position.
+export const createSimulatorTradeHistory = async (req, res) => {
+  try {
+    const {
+      executionId,
+      symbol,
+      positionType,
+      entryPrice,
+      exitPrice,
+      quantity,
+      status,
+      riskRewardRatio,
+      timeOpened,
+      timeClosed,
+    } = req.body;
+
+    if (!executionId || !symbol || !['LONG', 'SHORT'].includes(positionType)
+      || !['TARGET HIT', 'STOP LOSS HIT'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid simulator trade history data' });
+    }
+
+    const parsedEntry = Number(entryPrice);
+    const parsedExit = Number(exitPrice);
+    const parsedQuantity = Number(quantity);
+    if (![parsedEntry, parsedExit, parsedQuantity].every(Number.isFinite) || parsedQuantity < 1) {
+      return res.status(400).json({ success: false, message: 'Invalid trade prices or quantity' });
+    }
+
+    const existing = await TradeHistory.findOne({ userId: req.user._id, executionId });
+    if (existing) return res.status(200).json({ success: true, trade: existing });
+
+    const perUnit = positionType === 'LONG'
+      ? parsedExit - parsedEntry
+      : parsedEntry - parsedExit;
+    const trade = await TradeHistory.create({
+      userId: req.user._id,
+      executionId,
+      symbol: symbol.toUpperCase(),
+      exchange: 'NSE',
+      positionType,
+      quantity: parsedQuantity,
+      entryPrice: parsedEntry,
+      exitPrice: parsedExit,
+      profitLoss: perUnit * parsedQuantity,
+      status,
+      source: 'SIMULATOR_PLAN',
+      riskRewardRatio: Number(riskRewardRatio) || 0,
+      timeOpened: timeOpened || new Date(),
+      timeClosed: timeClosed || new Date(),
+      tradeDate: timeClosed || new Date(),
+      holdingDuration: Math.max(0, new Date(timeClosed || Date.now()) - new Date(timeOpened || Date.now())),
+    });
+
+    return res.status(201).json({ success: true, trade });
+  } catch (error) {
+    console.error('Create Simulator Trade History Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

@@ -45,6 +45,19 @@ const orderSchema = new mongoose.Schema(
       enum: ['OPEN', 'EXECUTED', 'CANCELLED'],
       default: 'OPEN'
     },
+    executionType: {
+      type: String,
+      enum: ['MANUAL', 'AUTO_EXIT'],
+      default: 'MANUAL'
+    },
+    exitReason: {
+      type: String,
+      enum: ['TARGET HIT', 'STOP LOSS HIT']
+    },
+    executionId: {
+      type: String,
+      trim: true
+    },
     // Trading simulation additional fields
     pattern: {
       type: String,

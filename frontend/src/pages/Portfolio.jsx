@@ -6,6 +6,7 @@ import {
   FaCheckCircle, FaTimesCircle, FaBolt
 } from 'react-icons/fa';
 import { positionApi, orderApi, userApi } from '../services/api.js';
+import { getLocalSimulatorTrades } from '../services/simulatorTradeHistory.js';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) =>
@@ -180,15 +181,17 @@ function CapitalBar({ invested, available, total }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Portfolio() {
   const [positions, setPositions] = useState([]);
+  const [simulatorTrades, setSimulatorTrades] = useState([]);
   const [profile, setProfile]     = useState(null);
   const [loading, setLoading]     = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
 
   const fetchData = async () => {
     try {
-      const [posRes, profileRes] = await Promise.allSettled([
+      const [posRes, profileRes, historyRes] = await Promise.allSettled([
         positionApi.getPositions(),
         userApi.getProfile(),
+        orderApi.getHistory(),
       ]);
       if (posRes.status === 'fulfilled' && posRes.value?.success) {
         setPositions(posRes.value.positions || []);
@@ -196,6 +199,15 @@ export default function Portfolio() {
       if (profileRes.status === 'fulfilled' && profileRes.value?.user) {
         setProfile(profileRes.value.user);
       }
+      const localTrades = getLocalSimulatorTrades();
+      const remoteTrades = historyRes.status === 'fulfilled' && historyRes.value?.success
+        ? (historyRes.value.trades || []).filter(trade => trade.source === 'SIMULATOR_PLAN')
+        : [];
+      const remoteIds = new Set(remoteTrades.map(trade => trade.executionId));
+      setSimulatorTrades([
+        ...remoteTrades,
+        ...localTrades.filter(trade => !remoteIds.has(trade.executionId)),
+      ].sort((a, b) => new Date(b.timeClosed || b.createdAt) - new Date(a.timeClosed || a.createdAt)));
     } catch (err) {
       console.error('Portfolio fetch error:', err);
     } finally {
@@ -222,7 +234,7 @@ export default function Portfolio() {
     );
   }
 
-  const hasData = positions.length > 0;
+  const hasData = positions.length > 0 || simulatorTrades.length > 0;
 
   return (
     <div className="min-h-screen bg-[#050816] p-4 md:p-8">
@@ -449,6 +461,62 @@ export default function Portfolio() {
                           } ${pos.status !== 'OPEN' ? pctColor(pos.pnl) : ''}`}>
                             {pos.status}
                           </span>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {simulatorTrades.length > 0 && (
+          <section>
+            <SectionHeader icon={FaCheckCircle} title="Completed Simulator Trades" color="#32CD32" />
+            <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/8 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[#B8C0D4] text-xs border-b border-white/10">
+                      {['Symbol', 'Position', 'Entry', 'Exit', 'Qty', 'Profit/Loss', 'Status', 'Opened', 'Closed'].map(header => (
+                        <th key={header} className="px-4 py-4 font-semibold whitespace-nowrap">{header}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {simulatorTrades.map((trade, index) => (
+                      <motion.tr
+                        key={trade.executionId || trade._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="border-b border-white/5 last:border-0 hover:bg-white/2 transition-colors"
+                      >
+                        <td className="px-4 py-4 font-semibold">{trade.symbol}</td>
+                        <td className={`px-4 py-4 font-semibold ${trade.positionType === 'LONG' ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {trade.positionType}
+                        </td>
+                        <td className="px-4 py-4">₹{fmt(trade.entryPrice)}</td>
+                        <td className="px-4 py-4">₹{fmt(trade.exitPrice)}</td>
+                        <td className="px-4 py-4 text-[#B8C0D4]">{trade.quantity}</td>
+                        <td className={`px-4 py-4 font-semibold ${pctColor(trade.profitLoss)}`}>
+                          {prefix(trade.profitLoss)}₹{fmt(trade.profitLoss)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                            trade.status === 'TARGET HIT'
+                              ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
+                              : 'bg-red-400/10 border-red-400/20 text-red-400'
+                          }`}>
+                            {trade.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-[#B8C0D4] whitespace-nowrap">
+                          {new Date(trade.timeOpened || trade.createdAt).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 text-[#B8C0D4] whitespace-nowrap">
+                          {new Date(trade.timeClosed || trade.createdAt).toLocaleString()}
                         </td>
                       </motion.tr>
                     ))}

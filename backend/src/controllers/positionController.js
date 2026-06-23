@@ -34,7 +34,7 @@ export const getPositionById = async (req, res) => {
 // @access  Private
 export const createPosition = async (req, res) => {
   try {
-    const { symbol, exchange, orderType, quantity, entryPrice, currentPrice } = req.body;
+    const { symbol, exchange, orderType, quantity, entryPrice, targetPrice, stopLossPrice, currentPrice } = req.body;
 
     if (!symbol || !exchange || !orderType || !quantity || !entryPrice) {
       return res.status(400).json({ success: false, message: 'All required fields must be provided' });
@@ -47,6 +47,8 @@ export const createPosition = async (req, res) => {
       orderType: orderType.toUpperCase(),
       quantity: Number(quantity),
       entryPrice: Number(entryPrice),
+      targetPrice: targetPrice ? Number(targetPrice) : undefined,
+      stopLossPrice: stopLossPrice ? Number(stopLossPrice) : undefined,
       currentPrice: Number(currentPrice || entryPrice),
       status: 'OPEN'
     });

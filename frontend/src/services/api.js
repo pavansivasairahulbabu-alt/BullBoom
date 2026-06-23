@@ -89,10 +89,13 @@ export const authApi = {
 // Orders & Trading API
 export const orderApi = {
   buy: (data) => api.post("/orders/buy", data).then((res) => res.data),
-  sell: (data) => api.post("/orders/sell", data).then((res) => res.data),
+    sell: (data) => api.post("/orders/sell", data).then((res) => res.data),
+    autoExit: (data) => api.post("/orders/auto-exit", data).then((res) => res.data),
   createOrder: (data) => api.post("/orders", data).then((res) => res.data),
   getOrders: () => api.get("/orders").then((res) => res.data),
-  getHistory: () => api.get("/orders/history").then((res) => res.data),
+    getHistory: () => api.get("/orders/history").then((res) => res.data),
+    createSimulatorHistory: (data) =>
+      api.post("/orders/history/simulator", data).then((res) => res.data),
   getPrice: (symbol) =>
     api.get(`/orders/price/${symbol}`).then((res) => res.data),
   deleteOrder: (id) => api.delete(`/orders/${id}`).then((res) => res.data),

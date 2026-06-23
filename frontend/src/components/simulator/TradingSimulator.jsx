@@ -31,6 +31,7 @@ export default function TradingSimulator({
   timeframe = 1,
   symbol = "NIFTY",
   activeTool = "cursor",
+  currentPrice,
 }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -113,7 +114,6 @@ export default function TradingSimulator({
 
     let supportLine = null;
     let resistanceLine = null;
-    let emaLine = null;
 
     chartRef.current = { chart, candlestickSeries };
     seriesRef.current = candlestickSeries;
@@ -128,18 +128,6 @@ export default function TradingSimulator({
     if (onStatsUpdate) {
       onStatsUpdate(initialStats);
     }
-
-    // Create badge container
-    const badgeContainer = document.createElement("div");
-    badgeContainer.style.position = "absolute";
-    badgeContainer.style.top = "10px";
-    badgeContainer.style.right = "10px";
-    badgeContainer.style.padding = "8px 16px";
-    badgeContainer.style.borderRadius = "8px";
-    badgeContainer.style.fontSize = "14px";
-    badgeContainer.style.fontWeight = "bold";
-    badgeContainer.style.zIndex = "1000";
-    chartContainerRef.current.appendChild(badgeContainer);
 
     // Chart click handler
     chart.subscribeClick((param) => {
@@ -223,7 +211,6 @@ export default function TradingSimulator({
       // Update support/resistance lines
       if (supportLine) candlestickSeries.removePriceLine(supportLine);
       if (resistanceLine) candlestickSeries.removePriceLine(resistanceLine);
-      if (emaLine) candlestickSeries.removePriceLine(emaLine);
 
       if (stats.support) {
         supportLine = candlestickSeries.createPriceLine({
@@ -246,25 +233,6 @@ export default function TradingSimulator({
           title: "Resistance",
         });
       }
-
-      if (stats.ema200) {
-        emaLine = candlestickSeries.createPriceLine({
-          price: stats.ema200,
-          color: "#FFD700",
-          lineWidth: 1,
-          lineStyle: 1,
-          axisLabelVisible: true,
-          title: "EMA200",
-        });
-      }
-
-      // Update badge
-      const state =
-        MARKET_STATE_LABELS[stats.marketState] || MARKET_STATE_LABELS.RANGE;
-      badgeContainer.textContent = state.text;
-      badgeContainer.style.backgroundColor = `${state.color}33`;
-      badgeContainer.style.border = `2px solid ${state.color}`;
-      badgeContainer.style.color = state.color;
 
       // Pattern detection for toasts
       if (
@@ -298,9 +266,6 @@ export default function TradingSimulator({
       window.removeEventListener("resize", handleResize);
       if (intervalRef.current) clearInterval(intervalRef.current);
       chart.remove();
-      if (badgeContainer && chartContainerRef.current) {
-        chartContainerRef.current.removeChild(badgeContainer);
-      }
     };
   }, [onStatsUpdate, symbol, timeframe]);
 
@@ -373,6 +338,8 @@ export default function TradingSimulator({
           series={seriesRef.current}
           activeTool={activeTool}
           chartContainer={chartContainerRef.current}
+          currentPrice={currentPrice}
+          symbol={symbol}
         />
       )}
 

@@ -12,6 +12,8 @@ export default function TradePage() {
   const tradeData = location.state || {};
   
   const [quantity, setQuantity] = useState(1);
+  const [targetPrice, setTargetPrice] = useState('');
+  const [stopLossPrice, setStopLossPrice] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -28,6 +30,8 @@ export default function TradePage() {
           support: tradeData.support,
           resistance: tradeData.resistance,
           ema200: tradeData.ema200,
+          targetPrice: targetPrice ? parseFloat(targetPrice) : undefined,
+          stopLossPrice: stopLossPrice ? parseFloat(stopLossPrice) : undefined,
         });
         toast.success("Order placed successfully!");
       } else if (type === "sell") {
@@ -136,6 +140,34 @@ export default function TradePage() {
                   className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
                 />
               </div>
+              {type === "buy" && (
+                <>
+                  <div>
+                    <label className="text-xs text-[#B8C0D4] mb-1 block">Target Price (Optional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={targetPrice}
+                      onChange={(e) => setTargetPrice(e.target.value)}
+                      placeholder="Enter target price"
+                      className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#B8C0D4] mb-1 block">Stop Loss (Optional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={stopLossPrice}
+                      onChange={(e) => setStopLossPrice(e.target.value)}
+                      placeholder="Enter stop loss price"
+                      className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="bg-[#050816] rounded-xl p-4 border border-white/5">
                 <div className="flex justify-between text-sm mb-2">
