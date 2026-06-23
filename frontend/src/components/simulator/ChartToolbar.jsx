@@ -25,6 +25,9 @@ export default function ChartToolbar({
             <option value={15}>15 Minutes</option>
             <option value={30}>30 Minutes</option>
             <option value={60}>1 Hour</option>
+            <option value={240}>4 Hours</option>
+            <option value={1440}>1 Day</option>
+            <option value={10080}>1 Week</option>
           </select>
         </div>
         <div className="flex items-center gap-2">
