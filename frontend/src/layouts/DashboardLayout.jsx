@@ -1,15 +1,16 @@
 import Sidebar from "../components/Sidebar";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { FaHome, FaChartLine, FaClipboardList, FaUser } from "react-icons/fa";
+import { FaHome, FaChartLine, FaClipboardList, FaUser, FaChartPie } from "react-icons/fa";
 
 export default function DashboardLayout() {
   const location = useLocation();
 
   const bottomNavItems = [
-    { path: "/dashboard", icon: <FaHome />, label: "Home" },
-    { path: "/watchlist", icon: <FaChartLine />, label: "Watchlist" },
-    { path: "/orders", icon: <FaClipboardList />, label: "Orders" },
-    { path: "/profile", icon: <FaUser />, label: "Profile" },
+    { path: "/dashboard", icon: <FaHome />,        label: "Home" },
+    { path: "/watchlist", icon: <FaChartLine />,    label: "Watchlist" },
+    { path: "/portfolio", icon: <FaChartPie />,     label: "Portfolio" },
+    { path: "/orders",    icon: <FaClipboardList />, label: "Orders" },
+    { path: "/profile",   icon: <FaUser />,          label: "Profile" },
   ];
 
   return (
@@ -23,7 +24,7 @@ export default function DashboardLayout() {
 
       {/* Mobile Navigation */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 px-2 py-2 backdrop-blur-xl md:hidden pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto grid max-w-md grid-cols-4 items-center gap-1">
+        <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1">
         {bottomNavItems.map((item) => (
           <Link
             key={item.path}

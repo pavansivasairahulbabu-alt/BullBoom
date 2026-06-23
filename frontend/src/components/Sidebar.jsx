@@ -4,6 +4,7 @@ import {
   FaChartLine,
   FaClipboardList,
   FaBriefcase,
+  FaChartPie,
   FaBook,
   FaUser,
   FaSignOutAlt,
@@ -14,12 +15,13 @@ export default function Sidebar() {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/dashboard", icon: <FaHome />, label: "Dashboard" },
-    { path: "/watchlist", icon: <FaChartLine />, label: "Watchlist" },
-    { path: "/orders", icon: <FaClipboardList />, label: "Orders" },
-    { path: "/positions", icon: <FaBriefcase />, label: "Positions" },
-    { path: "/education", icon: <FaBook />, label: "Learning Hub" },
-    { path: "/profile", icon: <FaUser />, label: "Profile" },
+    { path: "/dashboard",  icon: <FaHome />,       label: "Dashboard" },
+    { path: "/watchlist",  icon: <FaChartLine />,   label: "Watchlist" },
+    { path: "/orders",     icon: <FaClipboardList />,label: "Orders" },
+    { path: "/positions",  icon: <FaBriefcase />,   label: "Positions" },
+    { path: "/portfolio",  icon: <FaChartPie />,    label: "Portfolio" },
+    { path: "/education",  icon: <FaBook />,        label: "Learning Hub" },
+    { path: "/profile",    icon: <FaUser />,        label: "Profile" },
   ];
 
   return (
