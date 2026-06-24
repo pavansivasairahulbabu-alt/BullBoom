@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { orderApi } from '../services/api.js';
 import { useSearchParams } from 'react-router-dom';
+import { socketService } from '../services/socketService.js';
 
 // --- Status Colors ---
 const statusColors = {
@@ -46,9 +47,9 @@ export default function Orders() {
   const [searchParams] = useSearchParams();
 
   // --- Fetch Orders ---
-  const fetchOrders = async () => {
+  const fetchOrders = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await orderApi.getOrders();
       if (res.success) {
         setOrders(res.orders);
@@ -57,7 +58,7 @@ export default function Orders() {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -75,10 +76,18 @@ export default function Orders() {
       setIsCreateModalOpen(true);
     }
 
-    fetchOrders();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchOrders, 5000);
-    return () => clearInterval(interval);
+    fetchOrders(true);
+    
+    const handleRemoteUpdate = () => fetchOrders(false);
+    socketService.on('portfolioUpdated', handleRemoteUpdate);
+    socketService.on('triggerExecuted', handleRemoteUpdate);
+    socketService.on('positionUpdated', handleRemoteUpdate);
+
+    return () => {
+      socketService.off('portfolioUpdated', handleRemoteUpdate);
+      socketService.off('triggerExecuted', handleRemoteUpdate);
+      socketService.off('positionUpdated', handleRemoteUpdate);
+    };
   }, [searchParams]);
 
   // --- Statistics Calculations ---
@@ -124,7 +133,7 @@ export default function Orders() {
       toast.success('Order placed successfully!');
       setIsCreateModalOpen(false);
       setCreateForm({ symbol: '', exchange: 'NSE', orderType: 'BUY', quantity: '', price: '' });
-      fetchOrders();
+      fetchOrders(false);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(error.response?.data?.message || 'Failed to place order');
@@ -139,7 +148,7 @@ export default function Orders() {
       toast.success('Order deleted!');
       setIsDeleteConfirmOpen(false);
       setSelectedOrder(null);
-      fetchOrders();
+      fetchOrders(false);
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error('Failed to delete order');
@@ -151,7 +160,7 @@ export default function Orders() {
     try {
       await orderApi.updateStatus(orderId, newStatus);
       toast.success('Order status updated!');
-      fetchOrders();
+      fetchOrders(false);
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaBell, FaUserCircle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { dashboardApi } from '../services/api';
+import { socketService } from '../services/socketService.js';
 
 const formatNumber = (num) => {
   return new Intl.NumberFormat('en-IN', {
@@ -32,11 +33,16 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
 
-    // Auto-refresh every 5 seconds
-    const intervalId = setInterval(fetchDashboardData, 5000);
+    const handleRemoteUpdate = () => fetchDashboardData();
+    socketService.on('portfolioUpdated', handleRemoteUpdate);
+    socketService.on('triggerExecuted', handleRemoteUpdate);
+    socketService.on('positionUpdated', handleRemoteUpdate);
 
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
+    return () => {
+      socketService.off('portfolioUpdated', handleRemoteUpdate);
+      socketService.off('triggerExecuted', handleRemoteUpdate);
+      socketService.off('positionUpdated', handleRemoteUpdate);
+    };
   }, []);
 
   if (loading) {

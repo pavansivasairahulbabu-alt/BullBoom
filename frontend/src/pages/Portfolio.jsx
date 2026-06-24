@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fa';
 import { positionApi, orderApi, userApi } from '../services/api.js';
 import { getLocalSimulatorTrades } from '../services/simulatorTradeHistory.js';
+import { socketService } from '../services/socketService.js';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) =>
@@ -218,8 +219,17 @@ export default function Portfolio() {
 
   useEffect(() => {
     fetchData();
-    const iv = setInterval(fetchData, 5000);
-    return () => clearInterval(iv);
+    
+    const handleRemoteUpdate = () => fetchData();
+    socketService.on('portfolioUpdated', handleRemoteUpdate);
+    socketService.on('triggerExecuted', handleRemoteUpdate);
+    socketService.on('positionUpdated', handleRemoteUpdate);
+
+    return () => {
+      socketService.off('portfolioUpdated', handleRemoteUpdate);
+      socketService.off('triggerExecuted', handleRemoteUpdate);
+      socketService.off('positionUpdated', handleRemoteUpdate);
+    };
   }, []);
 
   const m = useMemo(() => computeMetrics(positions, profile), [positions, profile]);

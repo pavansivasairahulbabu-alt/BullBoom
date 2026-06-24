@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { triggerOrderApi } from '../services/api';
 import { useSearchParams } from 'react-router-dom';
+import { socketService } from '../services/socketService.js';
 
 const statusColors = {
   'PENDING': 'bg-yellow-500/20 border-yellow-400/30 text-yellow-400',
@@ -46,9 +47,9 @@ export default function TriggerOrders() {
 
   const [searchParams] = useSearchParams();
 
-  const fetchTriggerOrders = async () => {
+  const fetchTriggerOrders = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await triggerOrderApi.getTriggerOrders();
       if (res.success) {
         setTriggerOrders(res.triggerOrders);
@@ -57,7 +58,7 @@ export default function TriggerOrders() {
       console.error('Error fetching trigger orders:', error);
       toast.error('Failed to fetch trigger orders');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -74,9 +75,16 @@ export default function TriggerOrders() {
       setIsCreateModalOpen(true);
     }
 
-    fetchTriggerOrders();
-    const interval = setInterval(fetchTriggerOrders, 5000);
-    return () => clearInterval(interval);
+    fetchTriggerOrders(true);
+    
+    const handleRemoteUpdate = () => fetchTriggerOrders(false);
+    socketService.on('portfolioUpdated', handleRemoteUpdate);
+    socketService.on('triggerExecuted', handleRemoteUpdate);
+
+    return () => {
+      socketService.off('portfolioUpdated', handleRemoteUpdate);
+      socketService.off('triggerExecuted', handleRemoteUpdate);
+    };
   }, [searchParams]);
 
   const stats = useMemo(() => {
@@ -116,7 +124,7 @@ export default function TriggerOrders() {
       toast.success('Trigger order placed successfully!');
       setIsCreateModalOpen(false);
       setCreateForm({ symbol: '', exchange: 'NSE', orderType: 'BUY', quantity: '', triggerPrice: '' });
-      fetchTriggerOrders();
+      fetchTriggerOrders(false);
     } catch (error) {
       console.error('Error creating trigger order:', error);
       toast.error(error.response?.data?.message || 'Failed to place trigger order');
@@ -130,7 +138,7 @@ export default function TriggerOrders() {
       toast.success('Trigger order deleted!');
       setIsDeleteConfirmOpen(false);
       setSelectedOrder(null);
-      fetchTriggerOrders();
+      fetchTriggerOrders(false);
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error(error.response?.data?.message || 'Failed to delete order');
@@ -144,7 +152,7 @@ export default function TriggerOrders() {
       toast.success('Trigger order cancelled!');
       setIsCancelConfirmOpen(false);
       setSelectedOrder(null);
-      fetchTriggerOrders();
+      fetchTriggerOrders(false);
     } catch (error) {
       console.error('Error cancelling order:', error);
       toast.error(error.response?.data?.message || 'Failed to cancel order');
