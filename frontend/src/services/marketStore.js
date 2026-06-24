@@ -1,6 +1,7 @@
 // Centralized Simulation Market Store
 // Single Source Of Truth for all market data
 // Future-ready to be replaced with WebSocket or real API
+import { socketService } from "./socketService";
 
 const SYMBOL_CONFIG = {
   NIFTY: { volatility: 30, wickSize: 10, trendStrength: 1.0, breakoutStrength: 1.5, basePrice: 23500, minPrice: 23000, maxPrice: 24000 },
@@ -38,6 +39,25 @@ class MarketStore {
     
     // Initialize default symbols with base prices
     this.initializeSymbols();
+
+    // Listen for real backend prices
+    socketService.on("priceUpdate", (prices) => {
+      let updated = false;
+      if (!prices) return;
+      Object.keys(prices).forEach((symbol) => {
+        if (this.symbolsData[symbol]) {
+          const truth = prices[symbol].price;
+          // Only update if difference is meaningful to prevent jitter
+          if (Math.abs(this.symbolsData[symbol].currentPrice - truth) > 0.05) {
+             this.symbolsData[symbol].currentPrice = truth;
+             this.symbolsData[symbol].change = prices[symbol].change;
+             this.symbolsData[symbol].changePercent = prices[symbol].changePercent;
+             updated = true;
+          }
+        }
+      });
+      if (updated) this.notifySubscribers();
+    });
   }
 
   // Initialize all default symbols

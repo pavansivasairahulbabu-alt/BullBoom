@@ -1,4 +1,5 @@
 // Market States
+import { socketService } from "../services/socketService";
 const MARKET_STATES = {
   TREND_UP: "TREND_UP",
   TREND_DOWN: "TREND_DOWN",
@@ -193,6 +194,19 @@ class SimulationEngine {
     this.phaseDuration = 50; // candles to 100 candles per phase
     this.previousClose = null;
     this.volatilityIndex = generateVolatilityIndex();
+
+    // Anchor to backend prices to keep simulator in sync with auto-triggers
+    socketService.on("priceUpdate", (prices) => {
+      if (prices && prices[this.symbol]) {
+        // Soft anchor: move lastTickPrice halfway towards the backend truth to prevent huge visual jumps
+        const truth = prices[this.symbol].price;
+        if (Math.abs(this.lastTickPrice - truth) > 5) {
+           this.lastTickPrice = (this.lastTickPrice * 0.7 + truth * 0.3);
+        } else {
+           this.lastTickPrice = truth;
+        }
+      }
+    });
   }
 
   reset() {

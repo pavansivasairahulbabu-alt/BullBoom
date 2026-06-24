@@ -8,29 +8,30 @@ const dayHigh = new Map();
 const dayLow = new Map();
 const previousClose = new Map();
 
-// Initial prices for popular symbols
 const initialPrices = {
-  "NIFTY": 24500.25,
-  "BANKNIFTY": 51200.45,
-  "SENSEX": 74500.50,
-  "RELIANCE": 2950.30,
-  "INFY": 1820.75,
-  "TCS": 4250.50,
-  "HDFCBANK": 1950.40,
-  "ICICIBANK": 1350.60,
-  "SBIN": 980.35,
-  "AXISBANK": 1280.25,
-  "KOTAKBANK": 2150.70,
-  "TATAMOTORS": 1050.80,
-  "MARUTI": 12500.30,
-  "TITAN": 3650.60,
-  "ASIANPAINT": 3250.90,
-  "HINDUNILVR": 2950.45,
-  "BAJAJFINSV": 8500.30,
-  "BAJFINANCE": 11000.50,
-  "LICI": 1250.25,
-  "ADANIGREEN": 1450.80,
-  "ADANIENT": 3250.65
+  "NIFTY": 23500,
+  "BANKNIFTY": 50000,
+  "SENSEX": 74500,
+  "RELIANCE": 2850,
+  "INFY": 1850,
+  "TCS": 4250,
+  "HDFCBANK": 1750,
+  "ICICIBANK": 1150,
+  "SBIN": 820,
+  "AXISBANK": 1180,
+  "KOTAKBANK": 1820,
+  "TATAMOTORS": 980,
+  "MARUTI": 10800,
+  "TITAN": 3650,
+  "ASIANPAINT": 3200,
+  "HINDUNILVR": 2650,
+  "BAJAJFINSV": 1650,
+  "BAJFINANCE": 7200,
+  "LICI": 1250,
+  "WIPRO": 510,
+  "BHARTIARTL": 1420,
+  "HCLTECH": 1580,
+  "ITC": 490
 };
 
 // Initialize market data
