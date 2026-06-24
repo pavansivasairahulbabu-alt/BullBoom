@@ -60,7 +60,7 @@ const getChangeStyles = (value) => {
 };
 
 // --- Watchlist Row Component ---
-const WatchlistRow = ({ item, onDelete, onBuy, onSell, onChart }) => {
+const WatchlistRow = React.memo(({ item, onDelete, onBuy, onSell, onChart }) => {
   const [marketData, setMarketData] = useState(null);
   const prevPriceRef = useRef(null);
   const [priceFlash, setPriceFlash] = useState(null); // 'up', 'down', null
@@ -167,10 +167,10 @@ const WatchlistRow = ({ item, onDelete, onBuy, onSell, onChart }) => {
       </td>
     </motion.tr>
   );
-};
+});
 
 // --- Watchlist Card Component ---
-const WatchlistCard = ({ item, onDelete, onBuy, onSell, onChart }) => {
+const WatchlistCard = React.memo(({ item, onDelete, onBuy, onSell, onChart }) => {
   const [marketData, setMarketData] = useState(null);
   const prevPriceRef = useRef(null);
   const [priceFlash, setPriceFlash] = useState(null);
@@ -298,7 +298,7 @@ const WatchlistCard = ({ item, onDelete, onBuy, onSell, onChart }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 // --- Add Symbol Modal Component ---
 const AddSymbolModal = ({ isOpen, onClose, onAdd }) => {
@@ -593,9 +593,12 @@ export default function Watchlist() {
 
   const fetchWatchlist = async () => {
     try {
-      setLoading(true);
+      if (watchlist.length === 0) setLoading(true);
       const response = await watchlistApi.getWatchlist();
       if (response.success) {
+        // Compare with current watchlist before setting to avoid unnecessary re-renders
+        // We only update if the lengths are different, or items changed, but React state setter is smart enough sometimes. 
+        // We'll just set it. Since items are rendered with React.memo, this is fine.
         setWatchlist(response.watchlist);
       }
     } catch (error) {
@@ -660,12 +663,6 @@ export default function Watchlist() {
   useEffect(() => {
     fetchWatchlist();
   }, []);
-
-  useEffect(() => {
-    if (watchlist.length === 0) return;
-    const interval = setInterval(fetchWatchlist, 3000);
-    return () => clearInterval(interval);
-  }, [watchlist]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#050816] px-3 py-4 sm:px-4 md:px-8 md:py-8">
