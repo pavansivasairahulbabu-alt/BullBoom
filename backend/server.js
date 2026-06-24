@@ -12,6 +12,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+import jwt from "jsonwebtoken";
 import connectDB from "./config/db.js";
 import mongoose from "mongoose";
 import authRoutes from "./src/routes/authRoutes.js";
@@ -20,33 +23,77 @@ import watchlistRoutes from "./src/routes/watchlistRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
 import positionRoutes from "./src/routes/positionRoutes.js";
 import educationRoutes from "./src/routes/educationRoutes.js";
+import triggerOrderRoutes from "./src/routes/triggerOrderRoutes.js";
 import Position from "./src/models/Position.model.js";
+import User from "./src/models/User.model.js";
 import { executeAutoExitOrder } from "./src/services/trading.service.js";
 import { getMarketData } from "./src/services/marketDataProvider.js";
+import { monitorTriggerOrders, setSocketIO } from "./src/services/triggerOrder.service.js";
 import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 
+// ─── CORS origins ─────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://bullboom.onrender.com",
+  "https://bull-boom.onrender.com",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 // Middleware
-app.use(helmet()); // Add security headers
-app.use(morgan("dev")); // Log HTTP requests
+app.use(helmet());
+app.use(morgan("dev"));
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://bullboom.onrender.com",
-      "https://bull-boom.onrender.com",
-      process.env.CLIENT_URL,
-    ],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
-app.use(cookieParser()); // Parse cookies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Health Check Route
+// ─── HTTP server + Socket.IO ──────────────────────────────────────────────────
+const httpServer = createServer(app);
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Inject Socket.IO into trigger order service
+setSocketIO(io);
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (!token) return next(new Error("Authentication error: no token"));
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = decoded.id;
+    next();
+  } catch {
+    next(new Error("Authentication error: invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  const userId = socket.userId;
+  console.log(`[Socket.IO] User connected: ${userId}`);
+
+  // Join a private room for this user
+  socket.join(`user:${userId}`);
+
+  socket.on("disconnect", () => {
+    console.log(`[Socket.IO] User disconnected: ${userId}`);
+  });
+});
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -54,25 +101,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Auth Routes
+// ─── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
-
-// User Routes
 app.use("/api/user", userRoutes);
-
-// Watchlist Routes
 app.use("/api/watchlist", watchlistRoutes);
-
-// Order Routes
 app.use("/api/orders", orderRoutes);
-
-// Position Routes
 app.use("/api/positions", positionRoutes);
-
-// Education Routes
 app.use("/api/education", educationRoutes);
+app.use("/api/trigger-orders", triggerOrderRoutes);
 
-// Error handling middleware
+// ─── Error Handlers ───────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -82,15 +120,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use((req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: "Route Not Found",
-  });
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route Not Found" });
 });
 
-// Graceful shutdown function
+// ─── Graceful Shutdown ────────────────────────────────────────────────────────
 const gracefulShutdown = async (signal) => {
   console.log(`\nReceived ${signal}, shutting down gracefully...`);
   try {
@@ -105,51 +139,38 @@ const gracefulShutdown = async (signal) => {
   }
 };
 
-// Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
   gracefulShutdown("uncaughtException");
 });
-
-// Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
   console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
   gracefulShutdown("unhandledRejection");
 });
-
-// Handle shutdown signals
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-// Start server and connect to DB
+// ─── Start Server ─────────────────────────────────────────────────────────────
 const startServer = async () => {
   try {
-    // Connect to MongoDB first
     await connectDB();
 
-    // Start Express server
     const PORT = process.env.PORT || 5000;
-    const server = app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log("━━━━━━━━━━━━━━━━━━");
       console.log("🚀 Bull Boom Server Started");
       console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`📡 Port: ${PORT}`);
-      console.log("🗄️ MongoDB Connected");
+      console.log("🗄️  MongoDB Connected");
+      console.log("🔌 Socket.IO Ready");
       console.log("━━━━━━━━━━━━━━━━━━");
     });
 
-    // Handle server errors
-    server.on("error", (err) => {
+    httpServer.on("error", (err) => {
       if (err.code === "EADDRINUSE") {
-        console.log("━━━━━━━━━━━━━━━━━━");
         console.log(`❌ Port ${PORT} is already occupied`);
-        console.log("Please stop the existing process or change PORT in .env");
-        console.log("━━━━━━━━━━━━━━━━━━");
       } else if (err.code === "EACCES") {
-        console.log("━━━━━━━━━━━━━━━━━━");
         console.log(`❌ Port ${PORT} requires elevated privileges`);
-        console.log("Please run with appropriate permissions or change PORT");
-        console.log("━━━━━━━━━━━━━━━━━━");
       } else {
         console.error("❌ Server error:", err);
       }
@@ -161,37 +182,30 @@ const startServer = async () => {
   }
 };
 
-// Initialize the server
 startServer();
 
-// Auto-Exit Monitoring - Check positions every 3 seconds
+// ─── Auto-Exit Position Monitor (existing feature) ───────────────────────────
 const monitorPositionsForAutoExit = async () => {
   try {
-    // Get all OPEN BUY positions
     const openPositions = await Position.find({
-      orderType: 'BUY',
-      status: 'OPEN',
+      orderType: "BUY",
+      status: "OPEN",
       $or: [
         { targetPrice: { $exists: true, $ne: null } },
-        { stopLossPrice: { $exists: true, $ne: null } }
-      ]
+        { stopLossPrice: { $exists: true, $ne: null } },
+      ],
     });
 
     for (const position of openPositions) {
       try {
-        // Get current market price for the symbol
         const marketData = await getMarketData(position.symbol);
         const currentPrice = marketData.price;
-        
         let exitReason = null;
-        
-        // Check target hit (for LONG positions, target is above entry)
+
         if (position.targetPrice && currentPrice >= position.targetPrice) {
-          exitReason = 'TARGET HIT';
-        }
-        // Check stop loss hit
-        else if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
-          exitReason = 'STOP LOSS HIT';
+          exitReason = "TARGET HIT";
+        } else if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
+          exitReason = "STOP LOSS HIT";
         }
 
         if (exitReason) {
@@ -199,8 +213,8 @@ const monitorPositionsForAutoExit = async () => {
           await executeAutoExitOrder(position.userId, {
             symbol: position.symbol,
             exitPrice: currentPrice,
-            exitReason: exitReason,
-            executionId: uuidv4()
+            exitReason,
+            executionId: uuidv4(),
           });
         }
       } catch (err) {
@@ -208,12 +222,36 @@ const monitorPositionsForAutoExit = async () => {
       }
     }
   } catch (error) {
-    console.error('Error in auto-exit monitor:', error);
+    console.error("Error in auto-exit monitor:", error);
   }
 };
 
-// Start monitoring after DB connected
+// ─── Start Monitors after DB connects ─────────────────────────────────────────
 setTimeout(() => {
-  console.log('🔍 Starting auto-exit position monitor...');
+  console.log("🔍 Starting auto-exit position monitor...");
   setInterval(monitorPositionsForAutoExit, 3000);
+
+  console.log("🎯 Starting trigger order monitor...");
+  setInterval(monitorTriggerOrders, 2000); // Check every 2 seconds
 }, 5000);
+
+// ─── Broadcast live prices via Socket.IO every 2 seconds ──────────────────────
+// This lets frontend components receive real-time price pushes when connected.
+setTimeout(() => {
+  setInterval(async () => {
+    const symbols = [
+      "NIFTY", "BANKNIFTY", "SENSEX", "RELIANCE", "INFY", "TCS",
+      "HDFCBANK", "ICICIBANK", "SBIN", "AXISBANK", "KOTAKBANK",
+      "TATAMOTORS", "MARUTI", "TITAN", "ASIANPAINT", "HINDUNILVR",
+      "BAJAJFINSV", "BAJFINANCE", "LICI", "ADANIGREEN", "ADANIENT",
+    ];
+    const prices = {};
+    for (const symbol of symbols) {
+      try {
+        const d = await getMarketData(symbol);
+        prices[symbol] = { price: d.price, change: d.change, changePercent: d.changePercent };
+      } catch { /* ignore */ }
+    }
+    io.emit("priceUpdate", prices);
+  }, 2000);
+}, 6000);
