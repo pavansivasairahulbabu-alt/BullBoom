@@ -8,6 +8,62 @@ const MARKET_STATES = {
   BREAKOUT_DOWN: "BREAKOUT_DOWN",
 };
 
+const VOLATILITY_CATEGORIES = {
+  SLOW: {
+    label: "Slow",
+    min: 1,
+    max: 9,
+    color: "#32CD32",
+    movementMultiplier: 0.35,
+    wickMultiplier: 0.45,
+    reversalChance: 0.04,
+    spikeChance: 0.01,
+    spikeMultiplier: 1.2,
+  },
+  MEDIUM: {
+    label: "Medium",
+    min: 10,
+    max: 15,
+    color: "#FFD700",
+    movementMultiplier: 0.8,
+    wickMultiplier: 0.85,
+    reversalChance: 0.08,
+    spikeChance: 0.03,
+    spikeMultiplier: 1.6,
+  },
+  FAST: {
+    label: "Fast",
+    min: 16,
+    max: 20,
+    color: "#FF9F1C",
+    movementMultiplier: 1.25,
+    wickMultiplier: 1.25,
+    reversalChance: 0.13,
+    spikeChance: 0.06,
+    spikeMultiplier: 2.1,
+  },
+  UNPREDICTABLE: {
+    label: "Unpredictable",
+    min: 21,
+    max: 30,
+    color: "#FF4D4D",
+    movementMultiplier: 1.75,
+    wickMultiplier: 1.8,
+    reversalChance: 0.22,
+    spikeChance: 0.12,
+    spikeMultiplier: 3,
+  },
+};
+
+const getVolatilityCategory = (index) => {
+  if (index <= VOLATILITY_CATEGORIES.SLOW.max) return VOLATILITY_CATEGORIES.SLOW;
+  if (index <= VOLATILITY_CATEGORIES.MEDIUM.max) return VOLATILITY_CATEGORIES.MEDIUM;
+  if (index <= VOLATILITY_CATEGORIES.FAST.max) return VOLATILITY_CATEGORIES.FAST;
+  return VOLATILITY_CATEGORIES.UNPREDICTABLE;
+};
+
+const generateVolatilityIndex = () => Math.floor(Math.random() * 30) + 1;
+
 // Market Phases (from requirement 5)
 const MARKET_PHASES = [
   MARKET_STATES.RANGE,
@@ -136,6 +192,7 @@ class SimulationEngine {
     this.phaseTimer = 0; // tracks how long we've been in current phase
     this.phaseDuration = 50; // candles to 100 candles per phase
     this.previousClose = null;
+    this.volatilityIndex = generateVolatilityIndex();
   }
 
   reset() {
@@ -154,6 +211,7 @@ class SimulationEngine {
     this.phaseTimer = 0;
     this.phaseDuration = 50 + Math.random() * 50;
     this.previousClose = null;
+    this.volatilityIndex = generateVolatilityIndex();
   }
 
   setTimeframe(minutes) {
@@ -225,9 +283,31 @@ class SimulationEngine {
     if (this.lastTickPrice < this.minPrice + 50) bias = 1;
     if (this.lastTickPrice > this.maxPrice - 50) bias = -1;
 
+    const volatilityProfile = this._getVolatilityProfile();
     let multiplier = Math.max(1, Math.sqrt(this.timeframe));
-    let move = (Math.random() - 0.5) * 10 * multiplier;
-    let nextPrice = this.lastTickPrice + move + bias * 2 * multiplier;
+    let move =
+      (Math.random() - 0.5) *
+      this.symbolConfig.volatility *
+      0.18 *
+      volatilityProfile.movementMultiplier *
+      multiplier;
+
+    if (Math.random() < volatilityProfile.reversalChance) {
+      bias *= -1;
+    }
+
+    if (Math.random() < volatilityProfile.spikeChance) {
+      move +=
+        (Math.random() > 0.5 ? 1 : -1) *
+        this.symbolConfig.wickSize *
+        volatilityProfile.spikeMultiplier *
+        multiplier;
+    }
+
+    let nextPrice =
+      this.lastTickPrice +
+      move +
+      bias * 2 * volatilityProfile.movementMultiplier * multiplier;
     
     if (nextPrice > this.maxPrice) nextPrice = this.maxPrice - Math.random() * 5;
     if (nextPrice < this.minPrice) nextPrice = this.minPrice + Math.random() * 5;
@@ -264,6 +344,7 @@ class SimulationEngine {
 
   _generateSingleCandle(basePrice, time) {
     let bias = this._getBias();
+    const volatilityProfile = this._getVolatilityProfile();
 
     // Respect price limits
     const distanceToMin = basePrice - this.minPrice;
@@ -273,8 +354,13 @@ class SimulationEngine {
     if (distanceToMin < this.symbolConfig.volatility * 2) bias = 1;
     if (distanceToMax < this.symbolConfig.volatility * 2) bias = -1;
 
+    if (Math.random() < volatilityProfile.reversalChance) {
+      bias *= -1;
+    }
+
     // Calculate candle body size based on market phase
-    let volatility = this.symbolConfig.volatility;
+    let volatility =
+      this.symbolConfig.volatility * volatilityProfile.movementMultiplier;
     let bodySize = (Math.random() - 0.5) * volatility;
     if (this.marketState.includes("TREND_UP"))
       bodySize *= this.symbolConfig.trendStrength;
@@ -284,7 +370,15 @@ class SimulationEngine {
       bodySize *= this.symbolConfig.breakoutStrength;
     if (this.marketState.includes("CONSOLIDATION")) bodySize *= 0.5;
 
-    let wickSize = Math.random() * this.symbolConfig.wickSize;
+    if (Math.random() < volatilityProfile.spikeChance) {
+      bodySize +=
+        (Math.random() > 0.5 ? 1 : -1) *
+        this.symbolConfig.volatility *
+        volatilityProfile.spikeMultiplier;
+    }
+
+    let wickSize =
+      Math.random() * this.symbolConfig.wickSize * volatilityProfile.wickMultiplier;
 
     const open = basePrice;
     let close = open + bias * bodySize;
@@ -340,6 +434,19 @@ class SimulationEngine {
       high: parseFloat(high.toFixed(2)),
       low: parseFloat(low.toFixed(2)),
       close: parseFloat(close.toFixed(2)),
+    };
+  }
+
+  _getVolatilityProfile() {
+    const category = getVolatilityCategory(this.volatilityIndex);
+    const range = category.max - category.min || 1;
+    const positionInRange = (this.volatilityIndex - category.min) / range;
+    const intensity = 0.85 + positionInRange * 0.3;
+
+    return {
+      ...category,
+      movementMultiplier: category.movementMultiplier * intensity,
+      wickMultiplier: category.wickMultiplier * intensity,
     };
   }
 
@@ -495,6 +602,10 @@ class SimulationEngine {
       if (nextState !== currentState) {
         this.marketState = nextState;
       }
+
+      if (Math.random() < 0.35) {
+        this.volatilityIndex = generateVolatilityIndex();
+      }
     }
   }
 
@@ -636,6 +747,9 @@ class SimulationEngine {
       marketState: this.marketState,
       touchesAtSupport: this.touchesAtSupport,
       touchesAtResistance: this.touchesAtResistance,
+      volatilityIndex: this.volatilityIndex,
+      volatilityLabel: getVolatilityCategory(this.volatilityIndex).label,
+      volatilityColor: getVolatilityCategory(this.volatilityIndex).color,
     };
   }
 }

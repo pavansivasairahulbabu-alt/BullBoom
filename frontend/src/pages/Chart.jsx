@@ -22,6 +22,9 @@ export default function Chart() {
     resistance: 22600,
     activePattern: null,
     marketState: "RANGE",
+    volatilityIndex: 1,
+    volatilityLabel: "Slow",
+    volatilityColor: "#32CD32",
   });
   const [resetKey, setResetKey] = useState(0);
 
@@ -73,6 +76,9 @@ export default function Chart() {
           onReset={handleReset} 
           timeframe={timeframe}
           onTimeframeChange={handleTimeframeChange}
+          volatilityIndex={simData.volatilityIndex}
+          volatilityLabel={simData.volatilityLabel}
+          volatilityColor={simData.volatilityColor}
         />
 
         <SimulationStats
@@ -81,6 +87,9 @@ export default function Chart() {
           support={simData.support}
           resistance={simData.resistance}
           activePattern={simData.activePattern}
+          volatilityIndex={simData.volatilityIndex}
+          volatilityLabel={simData.volatilityLabel}
+          volatilityColor={simData.volatilityColor}
         />
 
         <div className="relative">

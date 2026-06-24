@@ -1,4 +1,3 @@
-import React from 'react';
 import PatternBadge from './PatternBadge';
 
 export default function SimulationStats({
@@ -7,12 +6,21 @@ export default function SimulationStats({
   support = 0,
   resistance = 0,
   activePattern = null,
+  volatilityIndex = 1,
+  volatilityLabel = "Slow",
+  volatilityColor = "#32CD32",
 }) {
   return (
-    <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <div className="space-y-1">
         <p className="text-gray-400 text-sm">Current Price</p>
         <p className="text-white text-xl font-bold">{currentPrice.toFixed(2)}</p>
+      </div>
+      <div className="space-y-1">
+        <p className="text-gray-400 text-sm">Volatility</p>
+        <p className="text-xl font-bold" style={{ color: volatilityColor }}>
+          {volatilityIndex} ({volatilityLabel})
+        </p>
       </div>
       <div className="space-y-1">
         {/* <p className="text-gray-400 text-sm">EMA 200</p> */}

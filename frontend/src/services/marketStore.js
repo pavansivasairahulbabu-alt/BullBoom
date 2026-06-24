@@ -56,6 +56,9 @@ class MarketStore {
         ema200: config.basePrice * 0.99,
         support: config.basePrice * 0.97,
         resistance: config.basePrice * 1.03,
+        volatilityIndex: 1,
+        volatilityLabel: 'Slow',
+        volatilityColor: '#32CD32',
         activePattern: null,
         candleHistory: [],
       };
@@ -74,6 +77,9 @@ class MarketStore {
         ema200: basePrice * 0.99,
         support: basePrice * 0.97,
         resistance: basePrice * 1.03,
+        volatilityIndex: 1,
+        volatilityLabel: 'Slow',
+        volatilityColor: '#32CD32',
         activePattern: null,
         candleHistory: [],
       };

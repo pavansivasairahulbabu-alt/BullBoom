@@ -3,6 +3,9 @@ export default function ChartToolbar({
   onReset,
   timeframe = 1,
   onTimeframeChange,
+  volatilityIndex = 1,
+  volatilityLabel = "Slow",
+  volatilityColor = "#32CD32",
 }) {
   return (
     <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
@@ -31,6 +34,12 @@ export default function ChartToolbar({
         <div className="flex items-center gap-2">
           <span className="text-gray-400 text-sm">Status</span>
           <span className="text-[#32CD32] font-bold">Simulation Mode</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-sm">Volatility</span>
+          <span className="font-bold" style={{ color: volatilityColor }}>
+            {volatilityIndex} ({volatilityLabel})
+          </span>
         </div>
       </div>
       

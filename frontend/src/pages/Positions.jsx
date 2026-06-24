@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   FaSearch,
   FaPlus,
@@ -10,6 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { positionApi, orderApi } from '../services/api.js';
+import { marketStore } from '../services/marketStore.js';
 
 // Helper to format numbers
 const formatNumber = (num) => {
@@ -17,6 +18,56 @@ const formatNumber = (num) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(num || 0);
+};
+
+const PARTICLES = Array.from({ length: 20 }, (_, index) => ({
+  id: index,
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  duration: 3 + Math.random() * 4,
+  delay: Math.random() * 2,
+}));
+
+const isOpenPosition = (position) => position.status === 'OPEN';
+
+const isShortPosition = (position) => {
+  const orderType = String(position.orderType || '').toUpperCase();
+  return orderType === 'SELL' || orderType === 'SHORT';
+};
+
+const calculateUnrealizedPnl = (position, quantity = position.quantity) => {
+  const currentPrice = Number(position.currentPrice) || 0;
+  const entryPrice = Number(position.entryPrice) || 0;
+  const numericQuantity = Number(quantity) || 0;
+  const directionMultiplier = isShortPosition(position) ? -1 : 1;
+
+  return (currentPrice - entryPrice) * numericQuantity * directionMultiplier;
+};
+
+const getLivePosition = (position, liveMarketData) => {
+  const symbolData = liveMarketData[position.symbol];
+  const currentPrice = Number(symbolData?.currentPrice);
+
+  if (!isOpenPosition(position) || Number.isNaN(currentPrice)) {
+    return position;
+  }
+
+  const entryPrice = Number(position.entryPrice) || 0;
+  const quantity = Number(position.quantity) || 0;
+  const priceDifference = currentPrice - entryPrice;
+  const currentValue = currentPrice * quantity;
+  const pnl = calculateUnrealizedPnl({ ...position, currentPrice }, quantity);
+  const pnlPercentage = entryPrice
+    ? (priceDifference / entryPrice) * 100 * (isShortPosition(position) ? -1 : 1)
+    : 0;
+
+  return {
+    ...position,
+    currentPrice,
+    currentValue,
+    pnl,
+    pnlPercentage,
+  };
 };
 
 export default function Positions() {
@@ -30,6 +81,7 @@ export default function Positions() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [liveMarketData, setLiveMarketData] = useState({});
   const [addForm, setAddForm] = useState({
     symbol: '',
     exchange: 'NSE',
@@ -66,10 +118,25 @@ export default function Positions() {
   };
 
   useEffect(() => {
-    fetchPositions();
+    const timeout = setTimeout(fetchPositions, 0);
     // Auto-refresh every 5 seconds
     const interval = setInterval(fetchPositions, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = marketStore.subscribe((data) => {
+      const nextMarketData = {};
+      Object.keys(data).forEach((symbol) => {
+        nextMarketData[symbol] = { ...data[symbol] };
+      });
+      setLiveMarketData(nextMarketData);
+    });
+
+    return unsubscribe;
   }, []);
 
   // Calculate portfolio summary
@@ -107,6 +174,27 @@ export default function Positions() {
       return matchesSearch && matchesType && matchesStatus;
     });
   }, [positions, searchQuery, filterType, filterStatus]);
+
+  const displayPositions = useMemo(
+    () => filteredPositions.map((pos) => getLivePosition(pos, liveMarketData)),
+    [filteredPositions, liveMarketData],
+  );
+
+  const selectedLivePosition = useMemo(
+    () =>
+      selectedPosition
+        ? getLivePosition(selectedPosition, liveMarketData)
+        : null,
+    [selectedPosition, liveMarketData],
+  );
+
+  const sellQuantity = Number(sellForm.quantity) || 0;
+  const selectedSellPnl = selectedLivePosition
+    ? calculateUnrealizedPnl(selectedLivePosition, sellQuantity)
+    : 0;
+  const selectedSellValue = selectedLivePosition
+    ? (Number(selectedLivePosition.currentPrice) || 0) * sellQuantity
+    : 0;
 
   // Handle add position
   const handleAddPosition = async (e) => {
@@ -185,13 +273,13 @@ export default function Positions() {
     <div className="min-h-screen bg-[#050816] p-4 md:p-8">
       {/* Animated Background */}
       <div className="fixed inset-0 opacity-20 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {PARTICLES.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute w-1 h-1 bg-[#32CD32] rounded-full"
-            style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
+            style={{ left: particle.left, top: particle.top }}
             animate={{ y: [0, -20, 0], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 2 }}
+            transition={{ duration: particle.duration, repeat: Infinity, ease: "easeInOut", delay: particle.delay }}
           />
         ))}
       </div>
@@ -300,7 +388,7 @@ export default function Positions() {
         <div className="bg-[#0B1220]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6">
           {loading ? (
             <div className="py-10 text-center text-[#B8C0D4]">Loading positions...</div>
-          ) : filteredPositions.length === 0 ? (
+          ) : displayPositions.length === 0 ? (
             <div className="text-center py-10 px-4">
               <div className="text-4xl mb-4">📈</div>
               <h3 className="text-xl font-bold mb-2">No Positions Yet</h3>
@@ -335,7 +423,7 @@ export default function Positions() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPositions.map((pos) => (
+                  {displayPositions.map((pos) => (
                     <motion.tr
                       key={pos._id}
                       initial={{ opacity: 0, x: -20 }}
@@ -561,7 +649,7 @@ export default function Positions() {
       )}
 
       {/* View Position Modal */}
-      {isViewModalOpen && selectedPosition && (
+      {isViewModalOpen && selectedLivePosition && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -577,66 +665,66 @@ export default function Positions() {
             <div className="space-y-3">
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Symbol</span>
-                <span className="font-semibold">{selectedPosition.symbol}</span>
+                <span className="font-semibold">{selectedLivePosition.symbol}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Exchange</span>
-                <span>{selectedPosition.exchange}</span>
+                <span>{selectedLivePosition.exchange}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Order Type</span>
-                <span className={`font-semibold ${selectedPosition.orderType === 'BUY' ? 'text-[#32CD32]' : 'text-red-400'}`}>
-                  {selectedPosition.orderType}
+                <span className={`font-semibold ${selectedLivePosition.orderType === 'BUY' ? 'text-[#32CD32]' : 'text-red-400'}`}>
+                  {selectedLivePosition.orderType}
                 </span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Quantity</span>
-                <span>{selectedPosition.quantity}</span>
+                <span>{selectedLivePosition.quantity}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Entry Price</span>
-                <span className="font-semibold">₹{formatNumber(selectedPosition.entryPrice)}</span>
+                <span className="font-semibold">₹{formatNumber(selectedLivePosition.entryPrice)}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Target Price</span>
-                <span className="font-semibold text-[#32CD32]">{selectedPosition.targetPrice ? `₹${formatNumber(selectedPosition.targetPrice)}` : '-'}</span>
+                <span className="font-semibold text-[#32CD32]">{selectedLivePosition.targetPrice ? `₹${formatNumber(selectedLivePosition.targetPrice)}` : '-'}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Stop Loss</span>
-                <span className="font-semibold text-red-400">{selectedPosition.stopLossPrice ? `₹${formatNumber(selectedPosition.stopLossPrice)}` : '-'}</span>
+                <span className="font-semibold text-red-400">{selectedLivePosition.stopLossPrice ? `₹${formatNumber(selectedLivePosition.stopLossPrice)}` : '-'}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Current Price</span>
-                <span className="font-semibold">₹{formatNumber(selectedPosition.currentPrice)}</span>
+                <span className="font-semibold">₹{formatNumber(selectedLivePosition.currentPrice)}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Invested Amount</span>
-                <span className="font-semibold">₹{formatNumber(selectedPosition.investedAmount)}</span>
+                <span className="font-semibold">₹{formatNumber(selectedLivePosition.investedAmount)}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Current Value</span>
-                <span className="font-semibold">₹{formatNumber(selectedPosition.currentValue)}</span>
+                <span className="font-semibold">₹{formatNumber(selectedLivePosition.currentValue)}</span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">P&L</span>
-                <span className={`font-semibold ${selectedPosition.pnl >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
-                  {selectedPosition.pnl >= 0 ? '+' : ''}₹{formatNumber(selectedPosition.pnl)}
+                <span className={`font-semibold ${selectedLivePosition.pnl >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+                  {selectedLivePosition.pnl >= 0 ? '+' : ''}₹{formatNumber(selectedLivePosition.pnl)}
                 </span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">P&L %</span>
-                <span className={`font-semibold ${selectedPosition.pnlPercentage >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
-                  {selectedPosition.pnlPercentage >= 0 ? '+' : ''}{formatNumber(selectedPosition.pnlPercentage)}%
+                <span className={`font-semibold ${selectedLivePosition.pnlPercentage >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+                  {selectedLivePosition.pnlPercentage >= 0 ? '+' : ''}{formatNumber(selectedLivePosition.pnlPercentage)}%
                 </span>
               </div>
               <div className="flex justify-between p-3 rounded-xl bg-[#050816]">
                 <span className="text-[#B8C0D4]">Status</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  selectedPosition.status === 'OPEN'
+                  selectedLivePosition.status === 'OPEN'
                     ? 'bg-blue-500/20 border border-blue-400/30 text-blue-400'
                     : 'bg-gray-500/20 border border-gray-400/30 text-gray-400'
                 }`}>
-                  {selectedPosition.status}
+                  {selectedLivePosition.status}
                 </span>
               </div>
             </div>
@@ -742,7 +830,7 @@ export default function Positions() {
       )}
 
       {/* Sell Position Modal */}
-      {isSellModalOpen && selectedPosition && (
+      {isSellModalOpen && selectedLivePosition && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -750,7 +838,7 @@ export default function Positions() {
             className="bg-[#0B1220] border border-white/10 rounded-2xl w-full max-w-md p-6"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">Sell {selectedPosition.symbol}</h3>
+              <h3 className="text-xl font-bold">Sell {selectedLivePosition.symbol}</h3>
               <button onClick={() => setIsSellModalOpen(false)} className="text-[#B8C0D4] hover:text-white transition-colors">
                 <FaTimes className="w-5 h-5" />
               </button>
@@ -759,19 +847,19 @@ export default function Positions() {
               <div className="bg-[#050816] rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-[#B8C0D4]">Symbol</span>
-                  <span className="font-semibold">{selectedPosition.symbol}</span>
+                  <span className="font-semibold">{selectedLivePosition.symbol}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-[#B8C0D4]">Quantity Available</span>
-                  <span>{selectedPosition.quantity}</span>
+                  <span>{selectedLivePosition.quantity}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-[#B8C0D4]">Entry Price</span>
-                  <span>₹{formatNumber(selectedPosition.entryPrice)}</span>
+                  <span>₹{formatNumber(selectedLivePosition.entryPrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#B8C0D4]">Current Price</span>
-                  <span>₹{formatNumber(selectedPosition.currentPrice)}</span>
+                  <span>₹{formatNumber(selectedLivePosition.currentPrice)}</span>
                 </div>
               </div>
 
@@ -781,7 +869,7 @@ export default function Positions() {
                   type="number"
                   required
                   min="1"
-                  max={selectedPosition.quantity}
+                  max={selectedLivePosition.quantity}
                   value={sellForm.quantity}
                   onChange={(e) => setSellForm({ ...sellForm, quantity: Number(e.target.value) })}
                   className="w-full px-4 py-3 rounded-xl bg-[#050816] border border-white/10 text-white outline-none focus:border-[#32CD32]/30 transition-all"
@@ -791,13 +879,13 @@ export default function Positions() {
               <div className="bg-[#050816] rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-[#B8C0D4]">Estimated P&L</span>
-                  <span className={`font-semibold ${((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity) >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
-                    {((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity) >= 0 ? '+' : ''}₹{formatNumber((selectedPosition.currentPrice - selectedPosition.entryPrice) * sellForm.quantity)}
+                  <span className={`font-semibold ${selectedSellPnl >= 0 ? 'text-[#32CD32]' : 'text-red-400'}`}>
+                    {selectedSellPnl >= 0 ? '+' : ''}₹{formatNumber(selectedSellPnl)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#B8C0D4]">Estimated Value</span>
-                  <span className="font-semibold">₹{formatNumber(selectedPosition.currentPrice * sellForm.quantity)}</span>
+                  <span className="font-semibold">₹{formatNumber(selectedSellValue)}</span>
                 </div>
               </div>
 

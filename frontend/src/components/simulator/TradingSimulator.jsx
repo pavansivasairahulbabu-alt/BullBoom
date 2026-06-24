@@ -205,6 +205,9 @@ export default function TradingSimulator({
           resistance: stats.resistance,
           activePattern: stats.activePattern,
           patternConfidence: stats.patternConfidence,
+          volatilityIndex: stats.volatilityIndex,
+          volatilityLabel: stats.volatilityLabel,
+          volatilityColor: stats.volatilityColor,
         });
       }
 
@@ -449,6 +452,15 @@ export default function TradingSimulator({
                   </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
+                  <div className="text-[#B8C0D4] text-xs mb-1">Volatility</div>
+                  <div
+                    className="font-bold text-sm"
+                    style={{ color: stats.volatilityColor || "#32CD32" }}
+                  >
+                    {stats.volatilityIndex || "-"} ({stats.volatilityLabel || "-"})
+                  </div>
+                </div>
+                <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
                   <div className="text-[#B8C0D4] text-xs mb-1">EMA200</div>
                   <div
                     className={`font-bold text-sm ${getEmaStatus() === "Above" ? "text-green-400" : "text-red-400"}`}
@@ -579,6 +591,15 @@ export default function TradingSimulator({
                   </div>
                   <div className="text-yellow-400 font-bold text-sm">
                     {getConfidence()}%
+                  </div>
+                </div>
+                <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
+                  <div className="text-[#B8C0D4] text-xs mb-1">Volatility</div>
+                  <div
+                    className="font-bold text-sm"
+                    style={{ color: stats.volatilityColor || "#32CD32" }}
+                  >
+                    {stats.volatilityIndex || "-"} ({stats.volatilityLabel || "-"})
                   </div>
                 </div>
                 <div className="bg-[#050816]/50 rounded-lg p-3 border border-white/5">
