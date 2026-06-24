@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { positionApi, orderApi } from '../services/api.js';
 import { marketStore } from '../services/marketStore.js';
+import { socketService } from '../services/socketService.js';
 
 // Helper to format numbers
 const formatNumber = (num) => {
@@ -102,9 +103,9 @@ export default function Positions() {
   const [sellForm, setSellForm] = useState({ quantity: 1, loading: false });
 
   // Fetch positions
-  const fetchPositions = async () => {
+  const fetchPositions = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await positionApi.getPositions();
       if (res.success) {
         setPositions(res.positions);
@@ -113,17 +114,23 @@ export default function Positions() {
       console.error('Error fetching positions:', error);
       toast.error('Failed to fetch positions');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    const timeout = setTimeout(fetchPositions, 0);
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchPositions, 5000);
+    fetchPositions(true);
+
+    const handleRemoteUpdate = () => fetchPositions(false);
+
+    socketService.on('portfolioUpdated', handleRemoteUpdate);
+    socketService.on('triggerExecuted', handleRemoteUpdate);
+    socketService.on('positionUpdated', handleRemoteUpdate);
+
     return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
+      socketService.off('portfolioUpdated', handleRemoteUpdate);
+      socketService.off('triggerExecuted', handleRemoteUpdate);
+      socketService.off('positionUpdated', handleRemoteUpdate);
     };
   }, []);
 
@@ -211,7 +218,7 @@ export default function Positions() {
         entryPrice: '',
         currentPrice: ''
       });
-      fetchPositions();
+      fetchPositions(false);
     } catch (error) {
       console.error('Error adding position:', error);
       toast.error(error.response?.data?.message || 'Failed to add position');
@@ -227,7 +234,7 @@ export default function Positions() {
       toast.success('Position updated successfully');
       setIsEditModalOpen(false);
       setSelectedPosition(null);
-      fetchPositions();
+      fetchPositions(false);
     } catch (error) {
       console.error('Error updating position:', error);
       toast.error(error.response?.data?.message || 'Failed to update position');
@@ -247,7 +254,7 @@ export default function Positions() {
         toast.success('Position sold successfully');
         setIsSellModalOpen(false);
         setSelectedPosition(null);
-        fetchPositions();
+        fetchPositions(false);
       }
     } catch (error) {
       console.error('Error selling position:', error);
@@ -262,7 +269,7 @@ export default function Positions() {
     try {
       await positionApi.deletePosition(position._id);
       toast.success('Position closed successfully');
-      fetchPositions();
+      fetchPositions(false);
     } catch (error) {
       console.error('Error closing position:', error);
       toast.error(error.response?.data?.message || 'Failed to close position');
