@@ -103,6 +103,15 @@ export const orderApi = {
     api.put(`/orders/${id}/status`, { status }).then((res) => res.data),
 };
 
+// Trigger Orders API
+export const triggerOrderApi = {
+  createTriggerOrder: (data) => api.post("/trigger-orders", data).then((res) => res.data),
+  getTriggerOrders: (status) => api.get("/trigger-orders", { params: { status } }).then((res) => res.data),
+  getTriggerOrderById: (id) => api.get(`/trigger-orders/${id}`).then((res) => res.data),
+  cancelTriggerOrder: (id) => api.patch(`/trigger-orders/${id}/cancel`).then((res) => res.data),
+  deleteTriggerOrder: (id) => api.delete(`/trigger-orders/${id}`).then((res) => res.data),
+};
+
 // Positions API
 export const positionApi = {
   getPositions: () => api.get("/positions").then((res) => res.data),
