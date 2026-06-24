@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Watchlist from '../pages/Watchlist';
 import Orders from '../pages/Orders';
+import TriggerOrders from '../pages/TriggerOrders';
 import Positions from '../pages/Positions';
 import Education from '../pages/Education';
 import Category from '../pages/education/Category';
@@ -30,6 +31,7 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/trigger-orders" element={<TriggerOrders />} />
           <Route path="/positions" element={<Positions />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/chart/:symbol" element={<Chart />} />

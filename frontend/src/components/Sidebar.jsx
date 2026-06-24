@@ -8,6 +8,7 @@ import {
   FaBook,
   FaUser,
   FaSignOutAlt,
+  FaStopwatch,
 } from 'react-icons/fa';
 import { motion } from "framer-motion";
 
@@ -18,6 +19,7 @@ export default function Sidebar() {
     { path: "/dashboard",  icon: <FaHome />,       label: "Dashboard" },
     { path: "/watchlist",  icon: <FaChartLine />,   label: "Watchlist" },
     { path: "/orders",     icon: <FaClipboardList />,label: "Orders" },
+    { path: "/trigger-orders", icon: <FaStopwatch />, label: "Trigger Orders" },
     { path: "/positions",  icon: <FaBriefcase />,   label: "Positions" },
     { path: "/portfolio",  icon: <FaChartPie />,    label: "Portfolio" },
     { path: "/education",  icon: <FaBook />,        label: "Learning Hub" },
