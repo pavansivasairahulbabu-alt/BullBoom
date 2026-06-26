@@ -90,7 +90,6 @@ export const authApi = {
 export const orderApi = {
   buy: (data) => api.post("/orders/buy", data).then((res) => res.data),
     sell: (data) => api.post("/orders/sell", data).then((res) => res.data),
-    autoExit: (data) => api.post("/orders/auto-exit", data).then((res) => res.data),
   createOrder: (data) => api.post("/orders", data).then((res) => res.data),
   getOrders: () => api.get("/orders").then((res) => res.data),
     getHistory: () => api.get("/orders/history").then((res) => res.data),

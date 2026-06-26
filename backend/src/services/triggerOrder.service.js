@@ -173,7 +173,7 @@ const executeSellTrigger = async (trigger, currentPrice) => {
     // Close or reduce position
     if (position.quantity <= sellQty) {
       position.status = 'CLOSED';
-      position.currentPrice = currentPrice;
+      position.exitPrice = currentPrice;
     } else {
       position.quantity -= sellQty;
       position.currentPrice = currentPrice;

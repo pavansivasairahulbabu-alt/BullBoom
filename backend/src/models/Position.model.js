@@ -50,6 +50,10 @@ const positionSchema = new mongoose.Schema(
       required: [true, 'Current price is required'],
       min: [0, 'Current price must be positive']
     },
+    exitPrice: {
+      type: Number,
+      min: [0, 'Exit price must be positive']
+    },
     status: {
       type: String,
       required: true,
@@ -88,16 +92,37 @@ positionSchema.virtual('investedAmount').get(function () {
 });
 
 positionSchema.virtual('currentValue').get(function () {
-  return this.quantity * this.currentPrice;
+  // For open positions, use current price; for closed, use exit price
+  const priceToUse = this.status === 'CLOSED' && this.exitPrice ? this.exitPrice : this.currentPrice;
+  return this.quantity * priceToUse;
 });
 
 positionSchema.virtual('pnl').get(function () {
-  return this.currentValue - this.investedAmount;
+  const priceToUse = this.status === 'CLOSED' && this.exitPrice ? this.exitPrice : this.currentPrice;
+  
+  if (this.orderType === 'BUY') {
+    // For BUY: Profit/Loss = (Current Market Price − Entry Price) × Quantity
+    return (priceToUse - this.entryPrice) * this.quantity;
+  } else if (this.orderType === 'SELL') {
+    // For SELL (Short): Profit/Loss = (Entry Price − Current Market Price) × Quantity
+    return (this.entryPrice - priceToUse) * this.quantity;
+  }
+  return 0;
 });
 
 positionSchema.virtual('pnlPercentage').get(function () {
   if (this.investedAmount === 0) return 0;
-  return (this.pnl / this.investedAmount) * 100;
+  
+  if (this.orderType === 'BUY') {
+    // For BUY: P&L % = ((Current Market Price − Entry Price) / Entry Price) × 100
+    const priceToUse = this.status === 'CLOSED' && this.exitPrice ? this.exitPrice : this.currentPrice;
+    return ((priceToUse - this.entryPrice) / this.entryPrice) * 100;
+  } else if (this.orderType === 'SELL') {
+    // For SELL (Short): P&L % = ((Entry Price − Current Market Price) / Entry Price) × 100
+    const priceToUse = this.status === 'CLOSED' && this.exitPrice ? this.exitPrice : this.currentPrice;
+    return ((this.entryPrice - priceToUse) / this.entryPrice) * 100;
+  }
+  return 0;
 });
 
 // Include virtuals in JSON and object output

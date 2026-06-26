@@ -1,7 +1,7 @@
 
 import Order from '../models/Order.model.js';
 import TradeHistory from '../models/TradeHistory.model.js';
-import { executeAutoExitOrder, executeBuyOrder, executeSellOrder } from '../services/trading.service.js';
+import { executeBuyOrder, executeSellOrder } from '../services/trading.service.js';
 import { getMarketData } from '../services/marketDataProvider.js';
 
 // Buy Order Endpoint
@@ -94,20 +94,6 @@ export const getTradeHistory = async (req, res) => {
   } catch (error) {
     console.error('Get Trade History Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-};
-
-// Auto-exit an existing manual BUY position at a simulator target/stop price.
-export const autoExitOrder = async (req, res) => {
-  try {
-    const result = await executeAutoExitOrder(req.user._id, req.body);
-    return res.status(result.alreadyExecuted ? 200 : 201).json(result);
-  } catch (error) {
-    console.error('Auto Exit Order Error:', error);
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to auto-exit position',
-    });
   }
 };
 

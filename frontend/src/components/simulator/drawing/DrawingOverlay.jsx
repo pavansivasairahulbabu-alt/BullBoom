@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { toast } from "react-hot-toast";
-import { recordSimulatorTrade } from "../../../services/simulatorTradeHistory";
 
 const KNOB_RADIUS = 6;
 const GREEN = "#32CD32";
@@ -17,7 +15,6 @@ export default function DrawingOverlay({
 }) {
   const canvasRef = useRef(null);
   const editorRefs = useRef(new Map());
-  const notifiedRef = useRef(new Set());
   const [drawings, setDrawings] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -38,74 +35,6 @@ export default function DrawingOverlay({
   useEffect(() => {
     stateRef.current.drawings = drawings;
   }, [drawings]);
-
-  useEffect(() => {
-    if (!Number.isFinite(currentPrice)) return;
-    drawings.forEach((drawing) => {
-      if (!POSITION_TYPES.has(drawing.type) || drawing.status !== "active" || drawing.points.length < 3) return;
-      const isLong = drawing.type === "long-position";
-      const entry = drawing.points[0].price;
-      const target = drawing.points[1].price;
-      const stop = drawing.points[2].price;
-      const quantity = Math.max(1, Number(drawing.quantity) || 1);
-      const targetHit = isLong ? currentPrice >= target : currentPrice <= target;
-      const stopHit = isLong ? currentPrice <= stop : currentPrice >= stop;
-      if (!targetHit && !stopHit) return;
-      if (notifiedRef.current.has(drawing.id)) return;
-
-      notifiedRef.current.add(drawing.id);
-      const status = targetHit ? "target-hit" : "stop-loss-hit";
-      const risk = isLong ? entry - stop : stop - entry;
-      const reward = isLong ? target - entry : entry - target;
-      const ratio = risk > 0 ? reward / risk : 0;
-      const exitPrice = targetHit ? target : stop;
-      const result = (targetHit ? reward : -risk) * quantity;
-      const closedAt = new Date().toISOString();
-      setDrawings((previous) => previous.map((item) =>
-        item.id === drawing.id
-          ? { ...item, status, tradeState: "closed", exitPrice, closedAt }
-          : item));
-
-      recordSimulatorTrade({
-        executionId: drawing.id,
-        symbol,
-        positionType: isLong ? "LONG" : "SHORT",
-        entryPrice: entry,
-        exitPrice,
-        quantity,
-        profitLoss: result,
-        status: targetHit ? "TARGET HIT" : "STOP LOSS HIT",
-        tradeState: "CLOSED",
-        riskRewardRatio: ratio,
-        timeOpened: drawing.openedAt,
-        timeClosed: closedAt,
-        source: "SIMULATOR_PLAN",
-      });
-
-      toast(
-        <div className="min-w-[220px] text-sm">
-          <div className={`mb-1 font-bold ${targetHit ? "text-[#32CD32]" : "text-[#FF4D4D]"}`}>
-            {targetHit ? "🎯 Target Reached" : "🛑 Stop Loss Hit"}
-          </div>
-          <div className="mb-1 font-semibold">Trade Closed Automatically</div>
-          <div>Symbol: <strong>{symbol}</strong></div>
-          <div>Entry: {entry.toFixed(2)}</div>
-          <div>Exit: {exitPrice.toFixed(2)}</div>
-          <div>Quantity: {quantity}</div>
-          <div>{targetHit ? "Profit" : "Loss"}: {Math.abs(result).toFixed(2)}</div>
-          <div>RR: 1 : {ratio.toFixed(2)}</div>
-        </div>,
-        {
-          duration: 6000,
-          style: {
-            background: "#0B1220",
-            color: "#FFFFFF",
-            border: `1px solid ${targetHit ? GREEN : RED}`,
-          },
-        },
-      );
-    });
-  }, [currentPrice, drawings, symbol]);
 
   const getCoords = (point, currentChart, currentSeries) => {
     if (!point || point.time == null || point.price == null) return null;

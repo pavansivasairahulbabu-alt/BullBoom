@@ -6,7 +6,6 @@ import {
   updateOrderStatus,
   buyOrder,
   sellOrder,
-  autoExitOrder,
   getTradeHistory,
   createSimulatorTradeHistory,
   getPrice
@@ -18,7 +17,6 @@ const router = express.Router();
 // Execute Buy/Sell orders
 router.post('/buy', protect, buyOrder);
 router.post('/sell', protect, sellOrder);
-router.post('/auto-exit', protect, autoExitOrder);
 
 // Market Price
 router.get('/price/:symbol', protect, getPrice);

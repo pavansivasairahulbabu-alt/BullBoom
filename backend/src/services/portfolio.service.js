@@ -1,4 +1,3 @@
-
 import User from '../models/User.model.js';
 import Position from '../models/Position.model.js';
 import { getMarketData } from './marketDataProvider.js';
@@ -20,7 +19,18 @@ export const calculatePortfolio = async (userId) => {
 
     const invested = position.quantity * position.entryPrice;
     const currentVal = position.quantity * position.currentPrice;
-    const pnl = currentVal - invested;
+    
+    // Calculate P&L based on position type
+    let pnl;
+    if (position.orderType === 'BUY') {
+      // For BUY: Profit/Loss = (Current Price - Entry Price) × Quantity
+      pnl = (position.currentPrice - position.entryPrice) * position.quantity;
+    } else if (position.orderType === 'SELL') {
+      // For SELL (Short): Profit/Loss = (Entry Price - Current Price) × Quantity
+      pnl = (position.entryPrice - position.currentPrice) * position.quantity;
+    } else {
+      pnl = 0;
+    }
 
     totalInvested += invested;
     totalCurrentValue += currentVal;

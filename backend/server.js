@@ -24,12 +24,7 @@ import orderRoutes from "./src/routes/orderRoutes.js";
 import positionRoutes from "./src/routes/positionRoutes.js";
 import educationRoutes from "./src/routes/educationRoutes.js";
 import triggerOrderRoutes from "./src/routes/triggerOrderRoutes.js";
-import Position from "./src/models/Position.model.js";
-import User from "./src/models/User.model.js";
-import { executeAutoExitOrder } from "./src/services/trading.service.js";
-import { getMarketData } from "./src/services/marketDataProvider.js";
 import { monitorTriggerOrders, setSocketIO } from "./src/services/triggerOrder.service.js";
-import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 
@@ -184,53 +179,8 @@ const startServer = async () => {
 
 startServer();
 
-// ─── Auto-Exit Position Monitor (existing feature) ───────────────────────────
-const monitorPositionsForAutoExit = async () => {
-  try {
-    const openPositions = await Position.find({
-      orderType: "BUY",
-      status: "OPEN",
-      $or: [
-        { targetPrice: { $exists: true, $ne: null } },
-        { stopLossPrice: { $exists: true, $ne: null } },
-      ],
-    });
-
-    for (const position of openPositions) {
-      try {
-        const marketData = await getMarketData(position.symbol);
-        const currentPrice = marketData.price;
-        let exitReason = null;
-
-        if (position.targetPrice && currentPrice >= position.targetPrice) {
-          exitReason = "TARGET HIT";
-        } else if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
-          exitReason = "STOP LOSS HIT";
-        }
-
-        if (exitReason) {
-          console.log(`Auto-exit triggered for position ${position._id}, ${exitReason}`);
-          await executeAutoExitOrder(position.userId, {
-            symbol: position.symbol,
-            exitPrice: currentPrice,
-            exitReason,
-            executionId: uuidv4(),
-          });
-        }
-      } catch (err) {
-        console.error(`Error checking position ${position._id}:`, err);
-      }
-    }
-  } catch (error) {
-    console.error("Error in auto-exit monitor:", error);
-  }
-};
-
 // ─── Start Monitors after DB connects ─────────────────────────────────────────
 setTimeout(() => {
-  console.log("🔍 Starting auto-exit position monitor...");
-  setInterval(monitorPositionsForAutoExit, 3000);
-
   console.log("🎯 Starting trigger order monitor...");
   setInterval(monitorTriggerOrders, 2000); // Check every 2 seconds
 }, 5000);

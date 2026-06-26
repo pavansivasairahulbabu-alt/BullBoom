@@ -40,9 +40,14 @@ const calculateUnrealizedPnl = (position, quantity = position.quantity) => {
   const currentPrice = Number(position.currentPrice) || 0;
   const entryPrice = Number(position.entryPrice) || 0;
   const numericQuantity = Number(quantity) || 0;
-  const directionMultiplier = isShortPosition(position) ? -1 : 1;
-
-  return (currentPrice - entryPrice) * numericQuantity * directionMultiplier;
+  
+  if (isShortPosition(position)) {
+    // For SELL (Short): Profit/Loss = (Entry Price - Current Price) × Quantity
+    return (entryPrice - currentPrice) * numericQuantity;
+  } else {
+    // For BUY: Profit/Loss = (Current Price - Entry Price) × Quantity
+    return (currentPrice - entryPrice) * numericQuantity;
+  }
 };
 
 const getLivePosition = (position, liveMarketData) => {
@@ -55,12 +60,20 @@ const getLivePosition = (position, liveMarketData) => {
 
   const entryPrice = Number(position.entryPrice) || 0;
   const quantity = Number(position.quantity) || 0;
-  const priceDifference = currentPrice - entryPrice;
   const currentValue = currentPrice * quantity;
   const pnl = calculateUnrealizedPnl({ ...position, currentPrice }, quantity);
-  const pnlPercentage = entryPrice
-    ? (priceDifference / entryPrice) * 100 * (isShortPosition(position) ? -1 : 1)
-    : 0;
+  
+  // Calculate P&L Percentage based on position type
+  let pnlPercentage = 0;
+  if (entryPrice !== 0) {
+    if (isShortPosition(position)) {
+      // For SELL (Short): P&L % = ((Entry Price − Current Price) / Entry Price) × 100
+      pnlPercentage = ((entryPrice - currentPrice) / entryPrice) * 100;
+    } else {
+      // For BUY: P&L % = ((Current Price − Entry Price) / Entry Price) × 100
+      pnlPercentage = ((currentPrice - entryPrice) / entryPrice) * 100;
+    }
+  }
 
   return {
     ...position,

@@ -95,9 +95,13 @@ export const deletePosition = async (req, res) => {
 
     // If position is still OPEN, mark as CLOSED instead of deleting
     if (position.status === 'OPEN') {
+      // Capture current price as exit price when manually closing
       const closedPosition = await Position.findByIdAndUpdate(
         req.params.id,
-        { status: 'CLOSED' },
+        { 
+          status: 'CLOSED',
+          exitPrice: position.currentPrice
+        },
         { new: true }
       );
       return res.status(200).json({ success: true, position: closedPosition, message: 'Position closed successfully' });
